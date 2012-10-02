@@ -1,7 +1,7 @@
 # About
 # =====
 #
-# A number of packages, such as pywcsgrid2 and APLpy have developed ways of
+# A number of packages, such as pywcsgrid2 and APLpy, have developed ways of
 # making plots in world coordinate systems (WCS) in Matplotlib, and since
 # this is a common issue in Astronomy, we are interested in combining all the
 # common functionality for inclusion in the Astropy core. The present document
@@ -37,7 +37,7 @@
 #
 # Object-oriented interface (similar for plt.figure() and true OO). This
 # uses a WCSAxes class which takes the same argument as Axes, but with an
-# additional optional arguemnt for the WCS object.
+# additional arguement for the WCS object.
 
 import matplotlib.pyplot as plt
 from astropy.wcs import WCS, WCSAxes
@@ -90,7 +90,7 @@ ax[other_wcs].contour(scuba_image)
 ax = WCSAxes(fig, [0.1, 0.1, 0.8, 0.8], wcs=WCS('cube.fits'),
              slice=['x', 3, 'y'])
 
-# or after intantiation:
+# or after instantiation:
 
 ax.set_slice(['x', 3, 'y'])
 
@@ -155,7 +155,7 @@ g.set_color('red')
 #
 # The format of the labels can be specified with:
 
-ax.set_xticklabels_format('x.xxx')  # decimal, 3 decimal places
+ax.set_xticklabels_format('x.xxx')  # decimal, non-angle coordinates, 3 decimal places
 
 ax.set_xticklabels_format('d.ddddd')  # decimal degrees, 5 decimal places
 
@@ -168,6 +168,9 @@ ax.set_xticklabels_format('hh:mm:ss')  # sexagesimal (hours)
 ax.set_xticklabels_format('hh:mm:ss.ss')  # sexagesimal (hours),
 
 # and similarly for set_yticklabels_format.
+#
+# Question: how do we set the format for e.g. an offset in arcseconds?
+# 's.ssss' is ambiguous because it could be arcseconds, or seconds of an hour.
 #
 # Tick/label spacing
 # ------------------
