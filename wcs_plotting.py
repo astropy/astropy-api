@@ -172,6 +172,15 @@ ax.set_xticklabels_format('hh:mm:ss.ss')  # sexagesimal (hours),
 # Question: how do we set the format for e.g. an offset in arcseconds?
 # 's.ssss' is ambiguous because it could be arcseconds, or seconds of an hour.
 #
+# Question: at the moment, there is nothing in this document about what axes
+# users want to show which ticks and coordinates on. For example, they might
+# want to make a plot which shows the RA on both the top and right axes, and
+# the Dec on the left and bottom axes, or combinations like that. I'm not sure
+# what the best way is to make this possible/easy. An example of that is the
+# top left plot in:
+#
+#       http://www.atnf.csiro.au/people/mcalabre/WCS/PGSBOX/index.html
+#
 # Tick/label spacing
 # ------------------
 #
