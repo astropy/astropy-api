@@ -241,6 +241,26 @@ ax['gal'].scatter(l, b)
 # Question: If the coordinate system is not specified, does it default to
 # pixel coordinates or the default world coordinate system of the WCS?
 #
+# Multiple coordinate systems
+# ---------------------------
+#
+# Question: users might want to show multiple coordinate systems at the same
+# time (e.g. Galactic and Equatorial). They could simply create two WCSAxes
+# instances and make one empty and transparent, but the axes will not be
+# linked. Should:
+
+ax['gal'].grid()
+
+# work and plot a Galactic grid? If so, then should:
+
+ax['gal'].set_xtick_spacing(0.1)
+
+# and so on work? Or should we have a since method that spawns a new linked WCSAxes object, e.g.:
+
+ax_gal = ax.get_axes('gal')
+
+# or something similar?
+#
 # Other issues
 # ------------
 #
