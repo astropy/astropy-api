@@ -33,11 +33,14 @@ We have enough information to actually do this operation if the units are equiva
 but we don't know what unit to output -- how do we solve this? It would be very powerful
 to have this kind of arithmetic.
 """
-quantity1 + quantity2
-quantity1 - quantity2
-quantity1 * quantity2
-quantity1 / quantity2
--quantity1
+
+# Each of these operations would return a new Quantity object with the units of the quantity
+#   object on the *left*
+new_quantity = quantity1 + quantity2
+new_quantity = quantity1 - quantity2
+new_quantity = quantity1 * quantity2
+new_quantity = quantity1 / quantity2
+new_quantity = -quantity1
 
 # Converting units
 # ----------------
