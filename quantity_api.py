@@ -45,10 +45,13 @@ new_quantity = -quantity1
 # Converting units
 # ----------------
 q = 11.412*u.meter
-q.to(u.kilometer)
+
+# to get a new quantity object in some new, equivalent units, you would use the to() method:
+q.to(u.kilometer) # this returns a new quantity object with the supplied units
 q.to(u.zettastokes) # Fails because not equivalent
 
-quantity1.in_(u.centimeter) # returns just the *value* of this quantity in the specified units (note we can't use 'in')
+# you may also just want the *value* of the quantity in some units. To do this, use the value_in() method:
+quantity1.value_in(u.centimeter) # returns the *value* (just a number, not an object) of this quantity in the specified units
 
 # Displaying
 # ----------
