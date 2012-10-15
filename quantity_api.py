@@ -73,6 +73,14 @@ q2 = u.Quantity(14.6, u.meter, uncertainty=0.2)
 new_quantity = q1 + q2 # drop the uncertainties from the resulting object
 # e.g. new_quantity.uncertainty = None
 
+# The Units package will have a native type that represents "no unit." Operations with such dimensionless
+#   objects will look like this (replace unit="" with whatever is decided for Unit package):
+Quantity(15.1234, unit=u.kilogram) * Quantity(0.75, unit="") # should work
+Quantity(15.1234, unit=u.kilogram) / Quantity(0.75, unit="") # should work
+
+Quantity(15.1234, unit=u.kilogram) + Quantity(0.75, unit="") # should NOT work
+Quantity(15.1234, unit=u.kilogram) - Quantity(0.75, unit="") # should NOT work
+
 # ----------------
 # Converting units
 # ----------------
