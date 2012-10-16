@@ -53,11 +53,11 @@ new_quantity = q1 * q2
 new_quantity = q1 / q2
 new_quantity = -q1
 
-# Operations will raise an exception if the units aren't equal
+# Operations will *adopt the units from the object on the left* if the units are equivalent
+#   for both objects involved:
 q1 = u.Quantity(11.41, u.meter)
 q2 = u.Quantity(15.37, u.kilometer)
-new_quantity = q1 + q2 # raises an exception!
-new_quantity = q1 + q2.to(q1.unit) # this is how to get around this
+new_quantity = q1 + q2 # has unit u.meter!
 
 # For objects with uncertainties, we can't propagate errors unless the user uses one of the astropy
 #   Uncertainty classes, which know how to do their own error propagation (but are still in development).
