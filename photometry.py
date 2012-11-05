@@ -45,7 +45,7 @@ a2 = EllipticalAnnulusAperture(1.5, 2.0, 1.0, np.pi / 3.)
 
 # The Aperture class can be sub-classed for user-defined shapes:
 
-p3 = CustomAperture()
+a3 = CustomAperture()
 
 # The details of the attributes to set and methods to overload is not
 # described here, since it is unimportant for the user.
@@ -75,12 +75,19 @@ p2 = PSF(my_custom_psf)
 
 p2 = PSF(lambda x: np.sin(x) / x)
 
+# PSFs can also be specified numerically:
+
+p3 = PSF(psf_array, sampling=5)
+
+# where the PSF array should be centered on the origin, and `sampling`
+# indicates the oversampling factor of the PSF (defaults to 1).
+#
 # The PSF class can be sub-classed for specific instruments/missions,
 # and for example to read PSFs from files (by default, the PSF class
 # does not accept any files, since there is no single format for
 # PSFs):
 
-p3 = SpitzerPSF('irac_8.0_psf.fits')
+p4 = SpitzerPSF('irac_8.0_psf.fits')
 
 # The details of the attributes to set and methods to overload is not
 # described here, since it is unimportant for the user.
@@ -123,7 +130,7 @@ results_ap = aperture_photometry(image, (x, y), ap)
 # is because it adds table-manipulation methods that users normally
 # expect of structured arrays, but which structured arrays do not have.
 
-# Make a plot of the flux vs error
+# Make a plot of the flux vs. error
 
 fig = plt.figure()
 ax = fig.add_subplot(1, 1, 1)
@@ -191,3 +198,36 @@ results = psf_photometry(data, galactic, psf)
 
 results = psf_photometry(data=image, coords=galactic,
                          psf=lambda x: np.sin(x) / x)
+
+# Multiple apertures
+# ------------------
+
+# In some cases, one might want to do photometry for multiple
+# apertures for a given source, or different apertures for each source
+# (or both). For the simplest case where we want to do photometry for
+# different apertures (but the same apertures for all sources), we can just
+# envisage passing a list of apertures:
+
+results = aperture_photometry(image, (x, y), [ap1, ap2, ap3])
+
+# and similiarly to do PSF photometry with multiple PSFs. The
+# resulting table will then have vector rather than scalar columns for
+# columns that depend on the apertures (flux, error, etc.).
+#
+# For the case where we want a different aperture for each source, if each
+# aperture is a different shape, then the user can just call
+# aperture_photometry for each object, but if all the apertures are the same
+# type (e.g. circular), then we can make things easier by initializing the
+# aperture object with a 1-d sequence of properties instead of scalars:
+
+aps1 = CircularAperture(radius=[1.,2.,3.])
+results = aperture_photometry(image, (x, y), aps1)
+
+# One can then combine this with the multiple apertures above, by
+# specifying lists of array-based apertures:
+
+aps1 = CircularAperture(radius=[1.,2.,3.])
+aps2 = CircularAperture(radius=[1.5,2.5,3.5])
+results = aperture_photometry(image, (x, y), [aps1, aps2])
+
+# which as before, returns vector columns in the table.
