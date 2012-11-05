@@ -28,13 +28,10 @@
 # Usage
 # =====
 #
-# Regions
-# -------
-
 # Apertures
 # ---------
 #
-# Apertures are objects that have a speciifc geometry, and are assumed
+# Apertures are objects that have a specific geometry, and are assumed
 # to be centered on the origin.
 
 from astropy.photometry import CircularAperture
@@ -152,7 +149,7 @@ results = psf_photometry(data, galactic, lambda x: np.sin(x) / x)
 #
 # While the photometry can be performed on data in the form of a Numpy
 # array, one can also pass an astropy.nddata.NDData object (or
-# anything initializing an NDData object) with uncertainties:
+# anything initializing an NDData object):
 
 from astropy.nddata import NDData
 data = NDData(image, mask=mask)
