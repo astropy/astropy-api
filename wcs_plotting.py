@@ -214,6 +214,49 @@ ax.set_xticks_spacing(0.1)
 # spacing cannot end up being smaller than 1' (and if it does it gets reset to
 # 1').
 #
+
+
+# Alternative API for Labels
+
+# For sky coordinate systems with high curvature (for example, near the
+# pole), the coupling between x- and y-axis to actual coordinates
+# become less well-defined.
+#
+# For example :  http://www.atnf.csiro.au/people/mcalabre/WCS/PGSBOX/pgsbox4.gif
+#
+# Therefore, the meaning of the method like "set_xticks" become ambiguous.
+#
+# One option is to use a number 1 & 2 to specify the sky coordinates.
+
+ax.set_ticklabel1_format("hms") # 1st coordinate (e.g., R.A.)
+ax.set_ticklabel2_format("dms") # 2nd coordinate (e.d., Dec)
+
+#
+ax.set_xaxis_coordinate(2) # x-axis show tick and ticklabels for 2nd
+                           # sky coordinate.
+ax.set_yaxis_coordinate(1) # x-axis show tick and ticklabels for 1st
+                           # sky coordinate.
+
+ax.set_yaxis_coordinate(1, which="right")
+# only the right y-axis show tick and ticklabels for the 1st sky coordinate.
+
+# to adjust tick locations
+ax.set_tick1_params(spacing=2, unit="m") # spacing in 2 minutes
+
+ax.set_tick1_params(nbins=4) # (approximately) 4 ticks
+
+ax.set_tick1_params(locs=[242.2, 242.3, 242.4])
+
+ax.set_tick1_params(locs=[242.2, 242.3, 242.4],
+                    labels=["242.2", "242.3", "242.4"])
+# ticks in specified locations with specified labels
+
+# These keyword parameters will be allowed for set_ticklabel[12]_format.
+ax.set_ticklabel1_format("hms", nbins=4)
+
+
+
+
 # Patches/shapes/lines
 # --------------------
 #
