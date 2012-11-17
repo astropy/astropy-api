@@ -1,7 +1,7 @@
 Example 1
 =========
 
-..image:: pgsbox4.gif
+.. image:: pgsbox4.gif
 
 ::
 
@@ -30,7 +30,7 @@ Example 1
 Example 2
 =========
 
-..image:: pgsbox5.gif
+.. image:: pgsbox5.gif
 
 ::
 
@@ -63,7 +63,7 @@ Example 2
 Example 3
 =========
 
-..image:: pgsbox6.gif
+.. image:: pgsbox6.gif
 
 ::
 
@@ -97,7 +97,7 @@ Example 3
 Example 4
 =========
 
-..image:: pgsbox7.gif
+.. image:: pgsbox7.gif
 
 ::
 
