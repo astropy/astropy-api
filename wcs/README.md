@@ -1,7 +1,7 @@
 Example 1
 =========
 
-![](wcs/pgsbox4.png)
+![](https://github.com/astrofrog/astropy-api/blob/wcs-plotting-proposal/wcs/pgsbox4.png?raw=true)
 
     import matplotlib.pyplot as plt
     from astropy.wcs import WCS, WCSAxes
@@ -28,7 +28,7 @@ Example 1
 Example 2
 =========
 
-![](wcs/pgsbox5.png)
+![](https://github.com/astrofrog/astropy-api/blob/wcs-plotting-proposal/wcs/pgsbox5.png?raw=true)
 
     import matplotlib.pyplot as plt
     from astropy.wcs import WCS, WCSAxes
@@ -59,7 +59,7 @@ Example 2
 Example 3
 =========
 
-![](wcs/pgsbox6.png)
+![](https://github.com/astrofrog/astropy-api/blob/wcs-plotting-proposal/wcs/pgsbox6.png?raw=true)
 
     import matplotlib.pyplot as plt
     from astropy.wcs import WCS, WCSAxes
@@ -91,8 +91,7 @@ Example 3
 Example 4
 =========
 
-![](wcs/pgsbox7.png)
-
+![](https://github.com/astrofrog/astropy-api/blob/wcs-plotting-proposal/wcs/pgsbox7.png?raw=true)
 
     import matplotlib.pyplot as plt
     from astropy.wcs import WCS, WCSAxes
