@@ -1,7 +1,7 @@
 Example 1
 =========
 
-![](pgsbox4.png)
+![](wcs/pgsbox4.png)
 
     import matplotlib.pyplot as plt
     from astropy.wcs import WCS, WCSAxes
@@ -28,7 +28,7 @@ Example 1
 Example 2
 =========
 
-![](pgsbox5.png)
+![](wcs/pgsbox5.png)
 
     import matplotlib.pyplot as plt
     from astropy.wcs import WCS, WCSAxes
@@ -59,7 +59,7 @@ Example 2
 Example 3
 =========
 
-![](pgsbox6.png)
+![](wcs/pgsbox6.png)
 
     import matplotlib.pyplot as plt
     from astropy.wcs import WCS, WCSAxes
@@ -91,7 +91,7 @@ Example 3
 Example 4
 =========
 
-![](pgsbox7.png)
+![](wcs/pgsbox7.png)
 
 
     import matplotlib.pyplot as plt
