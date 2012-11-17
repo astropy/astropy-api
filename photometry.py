@@ -32,7 +32,8 @@
 # ---------
 #
 # Apertures are objects that have a specific geometry, and are assumed
-# to be centered on the origin.
+# to be centered on the origin. Values for sizes are assumed to be in pixels
+# by default.
 
 from astropy.photometry import CircularAperture
 a1 = CircularAperture(1.)
@@ -47,6 +48,14 @@ a3 = CustomAperture()
 # The details of the attributes to set and methods to overload is not
 # described here, since it is unimportant for the user.
 #
+# If WCS information is available in the data, then apertures can be specified
+# in arcseconds, arcminutes, or degrees:
+
+from astropy import units as u
+a4 = CircularAperture(1. * u.arcsec)
+a5 = CircularAperture(2.3 * u.arcmin)
+a6 = CircularAperture(0.002 * u.degree)
+
 # PSFs
 # ----
 #
