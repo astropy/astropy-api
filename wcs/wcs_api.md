@@ -201,14 +201,6 @@ or even:
 
     ra = ax.coords['ra']
 
-This interface can also be shown to plot only the grid lines for a specific
-coordinate:
-
-    ax.coords[2].grid()
-
-This could be useful for example to show contours of constant wavelength in an
-IFU cube with distortions.
-
 Tick label format
 -----------------
 
@@ -300,7 +292,12 @@ Multiple coordinate systems
 ---------------------------
 
 As shown above, the API could be set up to allow users to plot objects in
-different coordinate systems. In general, using
+different coordinate systems, but only the default work coordinate system of
+the file is used for the labels and ticks.
+
+    ax.set_sky_system()
+
+In general, using
 
     ax[coordinate_system]
 
