@@ -52,9 +52,14 @@ a3 = CustomAperture()
 # in arcseconds, arcminutes, or degrees:
 
 from astropy import units as u
+
 a4 = CircularAperture(1. * u.arcsec)
+
 a5 = CircularAperture(2.3 * u.arcmin)
+
 a6 = CircularAperture(0.002 * u.degree)
+
+# and similarly for other aperture types.
 
 # PSFs
 # ----
@@ -68,6 +73,12 @@ a6 = CircularAperture(0.002 * u.degree)
 from astropy.photometry import GaussianPSF
 p1 = GaussianPSF(sigma=2.)
 
+# Define a Moffat PSF
+p2 = MoffatPSF(alpha=5., beta=0.1)
+
+# Define a Lorentzian PSF
+p3 = LorentzianPSF(gamma=2.)
+
 # Define a gaussian with an arbitrary function:
 
 from astropy.photometry import PSF
@@ -75,15 +86,15 @@ from astropy.photometry import PSF
 def my_custom_psf(x):
     return np.sin(x) / x
 
-p2 = PSF(my_custom_psf)
+p4 = AnalyticalPSF(my_custom_psf)
 
 # which, in this case, can also be written as a lambda function:
 
-p2 = PSF(lambda x: np.sin(x) / x)
+p5 = AnalyticalPSF(lambda x: np.sin(x) / x)
 
 # PSFs can also be specified numerically:
 
-p3 = PSF(psf_array, sampling=5)
+p6 = DiscretePSF(psf_array, sampling=5)
 
 # where the PSF array should be centered on the origin, and `sampling`
 # indicates the oversampling factor of the PSF (defaults to 1).
@@ -93,11 +104,24 @@ p3 = PSF(psf_array, sampling=5)
 # does not accept any files, since there is no single format for
 # PSFs):
 
-p4 = SpitzerPSF('irac_8.0_psf.fits')
+p7 = SpitzerPSF('irac_8.0_psf.fits')
 
 # The details of the attributes to set and methods to overload is not
 # described here, since it is unimportant for the user.
 #
+# For analytical PSFs, we need to worry about the truncation radius of the
+# PSF. We parametrize this by an argument ``truncation`` which should be set
+# to the radius at which the PSF can be truncated, e.g.:
+
+p8 = GaussianPSF(sigma=3., truncation=20.)
+
+# Building a PSF from a dataset should be made possible, using:
+
+p9 = create_psf(image, (x, y), truncation=10., sampling=2, mode='median')
+
+# the above will create a 40x40 DiscretePSF by median-combining the individual
+# PSFs of stars at the locations specified by ``(x, y)``.
+
 # Photometry
 # ----------
 #
