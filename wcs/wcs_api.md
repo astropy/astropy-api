@@ -336,26 +336,31 @@ Examples
 Example 1
 ---------
 
-![](https://github.com/astrofrog/astropy-api/blob/wcs-plotting-proposal/wcs/pgsbox4.png?raw=true)
+![](https://github.com/astrofrog/astropy-api/blob/wcs-plotting-proposal-v2/wcs/lmc.png?raw=true)
 
     import matplotlib.pyplot as plt
+
     from astropy.wcs import WCS, WCSAxes
+    from astropy.io import fits
+
+    # Read in LMC image
+    hdu = fits.open('lmc_mosaic.fits')
 
     # Initialize figure
     fig = plt.figure()
-    ax = WCSAxes(fig, [0.1, 0.1, 0.8, 0.8], wcs=WCS('image.fits'))
+    ax = WCSAxes(fig, [0.1, 0.1, 0.8, 0.8], wcs=WCS(hdu.header))
     fig.add_axes(ax)
 
-    # Set format
-    ax.set_tick_format(0, 'hh')
-    ax.set_tick_format(1, 'dd:mm:ss')
+    # By default, the correct coordinate system will be shown on the x and y
+    # axis, and the labels will be set based on the WCS coordinate system.
 
-    # Set tick label location
-    ax.set_tick_location(0, 'lb')  left and bottom
-    ax.set_tick_location(1, 'tr')  top and right
+    # Add the colorscale
+    ax.imshow(hdu.data, cmap=plt.cm.gist_heat, vmin=-1., vmax=10.)
 
-    # Draw grid
-    ax.grid()
+    # Add the grid
+    g = ax['world'].grid()
+    g.set_color('white')
+    g.set_alpha(0.25)
 
     # Save image
     fig.savefig('example1.png')
@@ -363,30 +368,37 @@ Example 1
 Example 2
 ---------
 
-![](https://github.com/astrofrog/astropy-api/blob/wcs-plotting-proposal/wcs/pgsbox5.png?raw=true)
+![](https://github.com/astrofrog/astropy-api/blob/wcs-plotting-proposal-v2/wcs/tutorial.png?raw=true)
+
+    # This example assumes that a 3-color PNG of the Galactic center has been
+    # previously made, and that the WCS information object is available in a
+    # variable named `wcs_rgb`.
 
     import matplotlib.pyplot as plt
+
     from astropy.wcs import WCS, WCSAxes
+    from astropy.io import fits
+    from astropy.table import Table
 
     # Initialize figure
     fig = plt.figure()
-    ax = WCSAxes(fig, [0.1, 0.1, 0.8, 0.8], wcs=WCS('image.fits'))
+    ax = WCSAxes(fig, [0.1, 0.1, 0.8, 0.8], wcs=wcs_rgb)
     fig.add_axes(ax)
 
-    # Set format for the RA tick labels
-    ax.set_tick_format(0, 'ddd')
-    ax.set_tick_format(1, 'ddd')
+    # By default, the correct coordinate system will be shown on the x and y
+    # axis, and the labels will be set based on the WCS coordinate system.
 
-    # Set tick label location
-    ax.set_tick_location(0, 'bt')
-    ax.set_tick_location(1, 'lr')
+    # Add the colorscale
+    ax.imshow(Image.open('galactic_center.png'))
 
-    # Draw grid for coordinates separately
-    ax.grid(0, color='red')
-    ax.grid(1, color='blue')
+    # Overlay a contour from a FITS file with a different WCS
+    hdu_msx = fits.open('msx.fits')
+    wcs_msx = WCS(hdu_msx.header)
+    ax[wcs_msx].contour(hdu_msx.data, levels=np.linspace(3., 10., 10), colors='white')
 
-    # Set title
-    ax.set_title("WCS conic equal area projection", color='turquoise')
+    # Overlay a catalog from coordinates in KF4
+    cat = Table.read('source_catalog.tbl', format='ipac')
+    ax['gal'].scatter(cat['GLON'], cat['GLAT'], edgecolor='red',facecolor='none')
 
     # Save image
     fig.savefig('example2.png')
@@ -394,7 +406,7 @@ Example 2
 Example 3
 ---------
 
-![](https://github.com/astrofrog/astropy-api/blob/wcs-plotting-proposal/wcs/pgsbox6.png?raw=true)
+![](https://github.com/astrofrog/astropy-api/blob/wcs-plotting-proposal-v2/wcs/pgsbox4.png?raw=true)
 
     import matplotlib.pyplot as plt
     from astropy.wcs import WCS, WCSAxes
@@ -404,21 +416,24 @@ Example 3
     ax = WCSAxes(fig, [0.1, 0.1, 0.8, 0.8], wcs=WCS('image.fits'))
     fig.add_axes(ax)
 
-    # Set format for the RA tick labels
-    ax.set_tick_format(0, 'hh')
-    ax.set_tick_format(1, 'ddd')
+    # Set tick and label properties
 
-    # Set tick label location
-    ax.set_tick_location(0, 'btl')
-    ax.set_tick_location(1, 'blr')
+    ra = ax.coords['ra']
+    ra.hide_ticks()  # no ticks visible in plot
+    ra.set_ticklabel_format('hh')
+    ra.set_ticklabel_position('lb')  # left and bottom
+    ra.set_axislabel_position('lb')
+    ra.set_axislabel('Right ascension')
 
-    # Draw grid for coordinates separately, and pass functions to determine
-    the color rather than fixed colors.
-    ax.grid(0, color=color_funtion_ha)
-    ax.grid(1, color=color_funtion_dec)
+    dec = ax.coords['dec']
+    dec.hide_ticks()  # no ticks visible in plot
+    dec.set_ticklabel_format('dd:mm:ss.ss')
+    dec.set_ticklabel_position('tr')  # top and right
+    dec.set_axislabel_position('tr')
+    dec.set_axislabel('Declination')
 
-    # Set title
-    ax.set_title("WCS polyconic projection")
+    # Draw grid
+    ax['world'].grid()
 
     # Save image
     fig.savefig('example3.png')
@@ -426,7 +441,49 @@ Example 3
 Example 4
 ---------
 
-![](https://github.com/astrofrog/astropy-api/blob/wcs-plotting-proposal/wcs/pgsbox7.png?raw=true)
+![](https://github.com/astrofrog/astropy-api/blob/wcs-plotting-proposal-v2/wcs/pgsbox5.png?raw=true)
+
+    import matplotlib.pyplot as plt
+    from astropy.wcs import WCS, WCSAxes
+
+    # Initialize figure
+    fig = plt.figure()
+    ax = WCSAxes(fig, [0.1, 0.1, 0.8, 0.8], wcs=WCS('image.fits'))
+    fig.add_axes(ax)
+
+    # Set tick and label properties
+
+    lon = ax.coords[0]
+    lon.hide_ticks()  # no ticks visible in plot
+    lon.set_ticklabel_format('ddd')
+    lon.set_ticklabel_position('tb')  # top and bottom
+    lon.set_axislabel_position('tb')
+    lon.set_axislabel_color('orange')
+    lon.set_spacing(number=2)
+    lon.grid(color='orange')
+
+    lat = ax.coords[1]
+    lat.hide_ticks()  # no ticks visible in plot
+    lat.set_ticklabel_format('ddd')
+    lat.set_ticklabel_position('lr')  # top and right
+    lat.set_axislabel_position('lr')
+    lat.set_axislabel('latitude')
+    lon.set_axislabel_color('blue')
+    lon.set_spacing(30.)
+    lon.grid(color='blue')
+
+    # Set title
+    ax.set_title("WCS conic equal area projection", color='aqua')
+
+    # Save image
+    fig.savefig('example4.png')
+
+Example 5
+---------
+
+![](https://github.com/astrofrog/astropy-api/blob/wcs-plotting-proposal-v2/wcs/pgsbox7.png?raw=true)
+
+    # We assume the original file is defined in Galactic coordinates
 
     import matplotlib.pyplot as plt
     from astropy.wcs import WCS, WCSAxes
@@ -436,33 +493,39 @@ Example 4
     ax_gal = WCSAxes(fig, [0.1, 0.1, 0.8, 0.8], wcs=WCS('image.fits'))
     fig.add_axes(ax_gal)
 
-    # Get an Axes with ecliptic coordinates
-    ax_ecl = ax.get_axes('ecliptic')
+    # Set tick and label properties
 
-    # Set format for the RA tick labels
-    ax_gal.set_tick_format(0, 'ddd')
-    ax_gal.set_tick_format(1, 'ddd')
-    ax_gal.set_tick_color(0, 'green')
-    ax_gal.set_tick_color(1, 'green')
+    lon = ax.coords['GLON']
+    lon.hide_ticks()  # no ticks visible in plot
+    lon.set_ticklabel_format('ddd')
+    lon.set_ticklabel_position('t')
+    lon.set_ticklabel_color('green')
+    lon.set_axislabel('')  # no axis label
 
-    # Set tick label location
-    ax_gal.set_tick_location(0, 't')
-    ax_gal.set_tick_location(1, 'r')
+    lat = ax.coords['GLAT']
+    lat.hide_ticks()  # no ticks visible in plot
+    lat.set_ticklabel_format('ddd')
+    lat.set_ticklabel_position('r')
+    lat.set_ticklabel_color('green')
+    lat.set_axislabel('')  # no axis label
 
     # Draw grid
-    ax_gal.grid(color='green')
+    ax['world'].grid(color='green')
 
-    # Set ticks for Galactic axes (defaults of x=longitude and y=latitude are
-    fine here, so don't change)
-    ax_ecl.set_tick_color(0, 'orange)
-    ax_ecl.set_tick_color(1, 'blue)
+    # Now show coordinate parameters for ecliptic grid
 
-    # Plot grid separately
-    ax_ecl.grid(0, color='orange')
-    ax_ecl.grid(1, color='blue')
+    lon = ax['ecl'].coords[0]
+    lon.set_ticklabel_color('orange')
+    lon.grid(color='orange')
+    lon.set_axislabel('longitude', color='orange')
+
+    lat = ax['ecl'].coords[1]
+    lat.set_ticklabel_color('blue')
+    lat.grid(color='blue')
+    lat.set_axislabel('latitude', color='blue')
 
     # Set title
     ax.set_title("WCS plate caree projection")
 
     # Save image
-    fig.savefig('example4.png')
+    fig.savefig('example5.png')
