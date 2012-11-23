@@ -333,6 +333,10 @@ To revert to absolute coordinates:
 Examples
 ========
 
+These are fake examples to show how would obtain a given plot with the
+proposed API. It is a way to ensure that the specification above actually
+works in practice.
+
 Example 1
 ---------
 
