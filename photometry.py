@@ -72,8 +72,6 @@ a6 = CircularAperture(0.002 * u.degree)
 # provided for convenience.
 #
 # Define a gaussian PSF with sigma=2.
-
-from astropy.photometry import GaussianPSF
 p1 = GaussianPSF(sigma=2.)
 
 # Define a Moffat PSF
@@ -221,14 +219,13 @@ coords_new = centroid(data, (x, y), <parameters>)
 
 # where <parameters> are arguments that define how the centroiding is done.
 #
-# In the case of PSF photometry, the coordinates could be tuned durng the
+# In the case of PSF photometry, the coordinates could be tuned during the
 # fitting itself:
 
 results = psf_photometry(data, (x, y), psf, tune_coordinates=True, tune_limit=7.)
 
 # where ``tune_limit`` would be the maximum radius the coordinates can change
 # by.
-
 
 # Making residual images
 # ----------------------
