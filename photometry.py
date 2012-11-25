@@ -12,7 +12,10 @@
 # Authors
 # =======
 #
-# * Thomas Robitaille
+# * Thomas Robitaille (@astrofrog)
+# * Kyle Barbary (@kbarbary)
+# * Rene Breton (@bretonr)
+# * David Shupe (@stargaser)
 #
 # Requirements
 # ============
@@ -117,11 +120,23 @@ p8 = GaussianPSF(sigma=3., truncation=20.)
 
 # Building a PSF from a dataset should be made possible, using:
 
-p9 = create_psf(image, (x, y), truncation=10., sampling=2, mode='median')
+p_new = create_psf(image, (x, y), truncation=10., sampling=2, mode='median')
 
 # the above will create a 40x40 DiscretePSF by median-combining the individual
 # PSFs of stars at the locations specified by ``(x, y)``.
-
+#
+# We should allow for position-dependent PSFs and PSFs with distortions.
+#
+# We may also want to support PRFs (Point Response Functions) which are
+# slightly different - see
+#
+# http://irsa.ipac.caltech.edu/data/SPITZER/docs/irac/calibrationfiles/psfprf/
+#
+# for more details. These are equivalent to over-sampled PSF, but are actually
+# easier to construct and use in fitting because the oversampling/downsampling
+# steps are not needed. Provided the PRF class has the same public interface
+# as the PSF class, it can be used interchangeably.
+#
 # Photometry
 # ----------
 #
@@ -177,6 +192,56 @@ results.write('photometry.xml', format='vo')  # VO table
 
 results = psf_photometry(data, galactic, lambda x: np.sin(x) / x)
 
+# PSF-fitting algorithm(s)
+# ------------------------
+
+# By default, the PSF photometry function would attempt a simultaneous fit of
+# the PSFs to the positions specified, but there are cases where a sequential
+# approach might work well and be much faster, so we could have a ``mode``
+# argument to specify how to operate:
+
+# By default, fit PSFs simultaneously at all positions
+
+results1 = psf_photometry(data, (x, y), psf)
+
+# or
+
+results1 = psf_photometry(data, (x, y), psf, mode='simultaneous')
+
+# Fit sources sequentially
+results2 = psf_photometry(data, (x, y), psf, mode='sequential')
+
+# Centroiding/tuning coordinates
+# ------------------------------
+#
+# We should provide a function to improve the accuracy of coordinates based on
+# centroiding algorithms, inside a set of apertures. This could be done with:
+
+coords_new = centroid(data, (x, y), <parameters>)
+
+# where <parameters> are arguments that define how the centroiding is done.
+#
+# In the case of PSF photometry, the coordinates could be tuned durng the
+# fitting itself:
+
+results = psf_photometry(data, (x, y), psf, tune_coordinates=True, tune_limit=7.)
+
+# where ``tune_limit`` would be the maximum radius the coordinates can change
+# by.
+
+
+# Making residual images
+# ----------------------
+
+# The psf_photometry routine would take an argument that if specified, returns
+# an array (or NDData object) containing the residual image.
+
+# By default, only return table of results
+results = psf_photometry(data, (x, y), psf)
+
+# If requested, return residuals
+results, residual = psf_photometry(data, (x, y), psf, residual=True)
+
 # Integration with NDData
 # -----------------------
 #
@@ -223,41 +288,47 @@ results = psf_photometry(data, galactic, psf)
 # Syntax
 # ------
 #
-# Wherever possible, arguments will be named arguments so that code
-# can more easily understandable, e.g.:
+# In order to ensure that code is more easily understandable, we should
+# recommend that users always explicilty state the argument names:
 
 results = psf_photometry(data=image, coords=galactic,
                          psf=lambda x: np.sin(x) / x)
 
-# Multiple apertures
-# ------------------
+# Multiple apertures/PSFs
+# -----------------------
 
-# In some cases, one might want to do photometry for multiple
-# apertures for a given source, or different apertures for each source
-# (or both). For the simplest case where we want to do photometry for
-# different apertures (but the same apertures for all sources), we can just
-# envisage passing a list of apertures:
+# In some cases, one might want to do photometry for multiple apertures or
+# PSFs for a given source. In this case, one can simply pass a list of
+# apertures or PSF objects:
 
-results = aperture_photometry(image, (x, y), [ap1, ap2, ap3])
+results_ap = aperture_photometry(image, (x, y), [ap1, ap2, ap3])
 
-# and similiarly to do PSF photometry with multiple PSFs. The
-# resulting table will then have vector rather than scalar columns for
-# columns that depend on the apertures (flux, error, etc.).
-#
-# For the case where we want a different aperture for each source, if each
-# aperture is a different shape, then the user can just call
-# aperture_photometry for each object, but if all the apertures are the same
-# type (e.g. circular), then we can make things easier by initializing the
-# aperture object with a 1-d sequence of properties instead of scalars:
+results_psf = psf_photometry(image, (x, y), [psf1, psf2, psf3])
 
-aps1 = CircularAperture(radius=[1.,2.,3.])
-results = aperture_photometry(image, (x, y), aps1)
+# We can also provide a single function that allows users to do either, or
+# both aperture and PSF photometry:
 
-# One can then combine this with the multiple apertures above, by
-# specifying lists of array-based apertures:
+results = photometry(image, (x, y), [ap1, psf1, ap2, psf2])
 
-aps1 = CircularAperture(radius=[1.,2.,3.])
-aps2 = CircularAperture(radius=[1.5,2.5,3.5])
-results = aperture_photometry(image, (x, y), [aps1, aps2])
+# Custom statistic for aperture photometry
+# ----------------------------------------
 
-# which as before, returns vector columns in the table.
+# We may want to have `aperture_photometry` accept a keyword that specifies
+# what statistic to calculate on pixels in the aperture:
+
+aperture_photometry(image, (x, y), ap, statistic=np.sum)  # sum pixels in aperture (default)
+aperture_photometry(image, (x, y), ap, statistic=np.average)  # average of pixels in aperture
+aperture_photometry(image, (x, y), ap, statistic=np.median)  # median of pixels in aperture
+
+# One idea for dealing with pixels partially in aperture would be to force the
+# `statistic` callable to accept a `weights` argument. In this case, a user
+# would have to define their own median method:
+
+def my_median(a, weights):
+    """Median of pixels more than halfway in aperture"""
+    return np.median(a[weights > 0.5])
+
+aperture_photometry(image, (x, y), ap, statistic=my_median)
+
+# There could also be a registry of built-in statistics, so that
+# `statistic='median'` works and has a specific default behavior.
