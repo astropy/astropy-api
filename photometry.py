@@ -285,6 +285,23 @@ results = psf_photometry(data, galactic, psf)
 # documented in cases where non-pixel coordinates are used, and the
 # PSF is non-axisymmetric.
 #
+# Photometry without NDData objects
+# ---------------------------------
+#
+# Since it would be nice to be able to use the photometry functions without
+# using the NDData class in all cases, we will allow ``wcs``, ``uncertainty``,
+# and ``mask`` to be passed to the photometry routines, e.g.:
+
+results = psf_photometry(image, (x, y), psf, wcs=WCS(...),
+                         uncertainty=StdDevUncertainty(...))
+
+# In addition, ``gain`` can also be passed, which is a scalar value to convert
+# the data units into the number of photons. This is used to add an additional
+# error term based on Poisson statistics.
+#
+# If an NDData object is passed as input, then these additional arguments
+# cannot be specified.
+#
 # Syntax
 # ------
 #
