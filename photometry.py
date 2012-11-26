@@ -324,6 +324,28 @@ results_psf = psf_photometry(image, (x, y), [psf1, psf2, psf3])
 
 results = photometry(image, (x, y), [ap1, psf1, ap2, psf2])
 
+# Varying apertures/PSFs
+# ----------------------
+
+# Users may want to have apertures/PSFs that are different for each source, or
+# apertures that depend on position based on a function.  We could have it that
+# whenever the aperture or PSF is called, the coordinates and the index of the
+# coordinates are passed to the aperture object, so it's up to the object to
+# decide what the actual aperture size or PSF properties are based on that. One
+# solution is to allow the properties in the apertures or PSFs to be arrays or
+# functions:
+
+def sigma_func(idx, x, y):
+    # calculate sigma based on idx, x, and y
+    return sigma
+
+psf = GaussianPSF(sigma=sigma_func)
+
+# Use a different aperture for each source - length of array must match length
+# of x and y
+ap = CircularAperture(radius=np.array([1,2,3]))
+```
+
 # Custom statistic for aperture photometry
 # ----------------------------------------
 
