@@ -330,19 +330,19 @@ results = photometry(image, (x, y), [ap1, psf1, ap2, psf2])
 # We may want to have `aperture_photometry` accept a keyword that specifies
 # what statistic to calculate on pixels in the aperture:
 
-aperture_photometry(image, (x, y), ap, statistic=np.sum)  # sum pixels in aperture (default)
-aperture_photometry(image, (x, y), ap, statistic=np.average)  # average of pixels in aperture
-aperture_photometry(image, (x, y), ap, statistic=np.median)  # median of pixels in aperture
+aperture_photometry(image, (x, y), ap, statistic='sum')  # sum pixels in aperture (default)
+aperture_photometry(image, (x, y), ap, statistic='mean')  # average of pixels in aperture
+aperture_photometry(image, (x, y), ap, statistic='median')  # median of pixels in aperture
 
-# One idea for dealing with pixels partially in aperture would be to force the
-# `statistic` callable to accept a `weights` argument. In this case, a user
-# would have to define their own median method:
+# In the above cases, the behavior for partial pixels should be well
+# documented, especially in the case of 'median'. Users could define their own
+# functions, which would need to have a 'weights' argument, so that the
+# function can deal with partial pixel coverage. For example, one could
+# implement a custom median function that uses only pixels with more than 50%
+# overlap with the aperture:
 
 def my_median(a, weights):
     """Median of pixels more than halfway in aperture"""
     return np.median(a[weights > 0.5])
 
 aperture_photometry(image, (x, y), ap, statistic=my_median)
-
-# There could also be a registry of built-in statistics, so that
-# `statistic='median'` works and has a specific default behavior.
