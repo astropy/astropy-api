@@ -135,6 +135,10 @@ p_new = create_psf(image, (x, y), truncation=10., sampling=2, mode='median')
 # steps are not needed. Provided the PRF class has the same public interface
 # as the PSF class, it can be used interchangeably.
 #
+# The implementation should support analytical PSFs that have multiple
+# parameters, and the best-fit parameters would be included in the resulting
+# photometry table.
+#
 # Photometry
 # ----------
 #
@@ -312,39 +316,42 @@ results = psf_photometry(data=image, coords=galactic,
 # -----------------------
 
 # In some cases, one might want to do photometry for multiple apertures or
-# PSFs for a given source. In this case, one can simply pass a list of
-# apertures or PSF objects:
+# PSFs. To do photometry for different apertures/PSF for each source, the user
+# can specify a list of apertures or PSFs:
 
+# A different aperture for each source
 results_ap = aperture_photometry(image, (x, y), [ap1, ap2, ap3])
 
+# A different PSF for each source
 results_psf = psf_photometry(image, (x, y), [psf1, psf2, psf3])
 
+# where the above examples require ``len(x) == len(y) == 3``. On the other
+# hand, to do photometry for several apertures/PSFs for every source, the user
+# can do:
+
+# 3 apertures for each source
+results_ap = aperture_photometry(image, (x, y), [[ap1, ap2, ap3]])
+
+# 3 PSFs for each source
+results_psf = psf_photometry(image, (x, y), [[psf1, psf2, psf3]])
+
+# These can be combined to use multiple apertures/PSFs per source which change
+# for each source:
+
+# ap1, ap2, ap3 for source 1, and ap4, ap5, ap6 for source 2
+results_ap = aperture_photometry(image, (x, y), [[ap1, ap2, ap3],
+                                                 [ap4, ap5, ap6]])
+
+# psf1, psf2, psf3 for source 1, and psf4, psf5, psf6 for source 2
+results_psf = psf_photometry(image, (x, y), [[psf1, psf2, psf3],
+                                             [psf4, psf5, psf6]])
+
+
 # We can also provide a single function that allows users to do either, or
-# both aperture and PSF photometry:
+# both aperture and PSF photometry, e.g.:
 
-results = photometry(image, (x, y), [ap1, psf1, ap2, psf2])
-
-# Varying apertures/PSFs
-# ----------------------
-
-# Users may want to have apertures/PSFs that are different for each source, or
-# apertures that depend on position based on a function.  We could have it that
-# whenever the aperture or PSF is called, the coordinates and the index of the
-# coordinates are passed to the aperture object, so it's up to the object to
-# decide what the actual aperture size or PSF properties are based on that. One
-# solution is to allow the properties in the apertures or PSFs to be arrays or
-# functions:
-
-def sigma_func(idx, x, y):
-    # calculate sigma based on idx, x, and y
-    return sigma
-
-psf = GaussianPSF(sigma=sigma_func)
-
-# Use a different aperture for each source - length of array must match length
-# of x and y
-ap = CircularAperture(radius=np.array([1,2,3]))
-```
+# ap1, psf1, ap2, psf2 for each source
+results = photometry(image, (x, y), [[ap1, psf1, ap2, psf2]])
 
 # Custom statistic for aperture photometry
 # ----------------------------------------
