@@ -311,7 +311,7 @@ Multiple coordinate systems
 ---------------------------
 
 As shown above, the API could be set up to allow users to plot objects in
-different coordinate systems, but only the default work coordinate system of
+different coordinate systems, but only the default world coordinate system of
 the file is used for the labels and ticks. To overlay a different coordinate
 system to the one included in the file, one can do:
 
@@ -329,13 +329,19 @@ Offset systems
 --------------
 
 In order to switch to showing offset rather than absolute coordinates, one can
-use
+use the coordinate objects described above:
 
-    ax['world'].enable_offset_mode(12.14, 15.55)
+    ra.enable_offset_mode(12.14)
+    dec.enable_offset_mode(15.55)
 
-To revert to absolute coordinates:
+or, more concisely,
 
-    ax['world'].disable_offset_mode()
+    ax.coords.enable_offset_mode((12.14, 15.55))
+
+where the tuple should have the same number of dimensions as the WCS. To revert
+to absolute coordinates:
+
+    ax.coords.disable_offset_mode()
 
 Examples
 ========
