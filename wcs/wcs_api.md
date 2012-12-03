@@ -283,6 +283,11 @@ which is simply a ``LineCollection``, which can be modified::
     lines.set_alpha(0.5)
     lines.set_linewidth(2)
 
+For convenience, users can also simply draw a grid for all the coordinates in
+one command::
+
+    ax.coords.show_gridlines()
+
 Patches/shapes/lines
 --------------------
 
@@ -375,7 +380,7 @@ Example 1
     ax.imshow(hdu.data, cmap=plt.cm.gist_heat, vmin=-1., vmax=10.)
 
     # Add the grid
-    g = ax['world'].grid()
+    g = ax.coords.show_gridlines()
     g.set_color('white')
     g.set_alpha(0.25)
 
