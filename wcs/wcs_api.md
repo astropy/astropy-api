@@ -110,6 +110,17 @@ projection, we could do e.g.:
 Note that ``ax[other_wcs].imshow()`` would not work (due to matplotlib
 limitations).
 
+As a convenience, ``imshow``, ``contour``, and ``contourf`` should be able to
+read in data and WCS from FITS and image files::
+
+    ax.imshow('image.fits')
+    ax.imshow('image_rgb.png')
+    ax.contour('scuba.fits')
+
+which should automatically overlay it in the right WCS. However, if ``imshow``
+is given a file with a WCS transformation different from the one being used for
+the axes, then an exception should be raised.
+
 Multi-dimensional WCS objects
 -----------------------------
 
@@ -150,20 +161,6 @@ Subsequent calls to e.g.
     v_slice.set(3)
 
 would then force the axes to refresh.
-
-Coordinate grid
----------------
-
-To overlay a grid, the normal matplotlib method can be used:
-
-    ax['fk5'].grid()
-
-and to modify the visual properties of the grid, users can capture a
-handle to the grid object:
-
-    g = ax['fk5'].grid()
-    g.set_alpha(0.5)
-    g.set_color('red')
 
 Ticks and tick label properties
 -------------------------------
@@ -264,6 +261,28 @@ representable by the format. For example, if the format is set to 'dd:mm',
 then the default tick spacing cannot end up being smaller than 1' (and if it
 does it gets reset to 1').
 
+Coordinate grid
+---------------
+
+Since the properties of a coordinate grid are linked to the properties of the
+ticks and labels, grid lines 'belong' to the coordinate objects described
+above. For example, one can show a grid with red lines for RA and blue lines
+for declination with:
+
+    ra, dec = ax.coords
+    ra.show_gridlines(color='blue')
+    dec.show_gridlines(color='red')
+
+and to modify the visual properties of the grid, users can capture a
+handle to the grid lines:
+
+    lines = dec.show_gridlines(color='red')
+
+which is simply a ``LineCollection``, which can be modified::
+
+    lines.set_alpha(0.5)
+    lines.set_linewidth(2)
+
 Patches/shapes/lines
 --------------------
 
@@ -293,27 +312,18 @@ Multiple coordinate systems
 
 As shown above, the API could be set up to allow users to plot objects in
 different coordinate systems, but only the default work coordinate system of
-the file is used for the labels and ticks.
+the file is used for the labels and ticks. To overlay a different coordinate
+system to the one included in the file, one can do:
 
-    ax.set_sky_system()
+    glon, glat = ax.get_coords_overlay('galactic')
 
-In general, using
+and then use the returned objects as the ``coords`` objects above, to set the
+label, tick, and grid line properties.
 
-    ax[coordinate_system]
+To hide the labels, ticks, and grid lines for the default coordinate system,
+one can do:
 
-has the effect of creating a new ``WCSAxes`` that is linked to the original one
-but contains the additional coordinate transformation. By default, the axes
-and labels are not shown, but the user could enable these, e.g.:
-
-    glon = ax['gal'].coords[0]
-    glon.show()
-
-then adjust the parameters accordingly. By default, As a convenience, users
-can simply use
-
-    ax.switch_default_label_system('gal')
-
-to hide all other labels
+    ax.coords.hide()
 
 Offset systems
 --------------
@@ -390,12 +400,10 @@ Example 2
     # axis, and the labels will be set based on the WCS coordinate system.
 
     # Add the colorscale
-    ax.imshow(Image.open('galactic_center.png'))
+    ax.imshow('galactic_center.png')
 
     # Overlay a contour from a FITS file with a different WCS
-    hdu_msx = fits.open('msx.fits')
-    wcs_msx = WCS(hdu_msx.header)
-    ax[wcs_msx].contour(hdu_msx.data, levels=np.linspace(3., 10., 10), colors='white')
+    ax.contour('msx.fits', levels=np.linspace(3., 10., 10), colors='white')
 
     # Overlay a catalog from coordinates in KF4
     cat = Table.read('source_catalog.tbl', format='ipac')
@@ -419,22 +427,21 @@ Example 3
 
     # Set tick and label properties
 
-    ra = ax.coords['ra']
+    ra, dec = ax.coords
+
     ra.hide_ticks()  # no ticks visible in plot
     ra.set_ticklabel_format('hh')
     ra.set_ticklabel_position('lb')  # left and bottom
     ra.set_axislabel_position('lb')
     ra.set_axislabel('Right ascension')
+    ra.show_gridlines()
 
-    dec = ax.coords['dec']
     dec.hide_ticks()  # no ticks visible in plot
     dec.set_ticklabel_format('dd:mm:ss.ss')
     dec.set_ticklabel_position('tr')  # top and right
     dec.set_axislabel_position('tr')
     dec.set_axislabel('Declination')
-
-    # Draw grid
-    ax['world'].grid()
+    dec.show_gridlines()
 
     # Save image
     fig.savefig('example3.png')
@@ -454,16 +461,16 @@ Example 4
 
     # Set tick and label properties
 
-    lon = ax.coords[0]
+    lon, lat = ax.coords
+
     lon.hide_ticks()  # no ticks visible in plot
     lon.set_ticklabel_format('ddd')
     lon.set_ticklabel_position('tb')  # top and bottom
     lon.set_axislabel_position('tb')
     lon.set_axislabel_color('orange')
     lon.set_spacing(number=2)
-    lon.grid(color='orange')
+    lon.show_gridlines(color='orange')
 
-    lat = ax.coords[1]
     lat.hide_ticks()  # no ticks visible in plot
     lat.set_ticklabel_format('ddd')
     lat.set_ticklabel_position('lr')  # top and right
@@ -471,7 +478,7 @@ Example 4
     lat.set_axislabel('latitude')
     lon.set_axislabel_color('blue')
     lon.set_spacing(30.)
-    lon.grid(color='blue')
+    lon.show_gridlines(color='blue')
 
     # Set title
     ax.set_title("WCS conic equal area projection", color='aqua')
@@ -496,34 +503,33 @@ Example 5
 
     # Set tick and label properties
 
-    lon = ax.coords['GLON']
-    lon.hide_ticks()  # no ticks visible in plot
-    lon.set_ticklabel_format('ddd')
-    lon.set_ticklabel_position('t')
-    lon.set_ticklabel_color('green')
-    lon.set_axislabel('')  # no axis label
+    glon, glat = ax.coords  # only two coordinates, so can be concise
 
-    lat = ax.coords['GLAT']
-    lat.hide_ticks()  # no ticks visible in plot
-    lat.set_ticklabel_format('ddd')
-    lat.set_ticklabel_position('r')
-    lat.set_ticklabel_color('green')
-    lat.set_axislabel('')  # no axis label
+    glon.set_ticklabel_format('ddd')
+    glon.set_ticklabel_position('t')
+    glon.set_ticklabel_color('green')
+    glon.set_axislabel(None)
+    glon.show_gridlines(color='green')
 
-    # Draw grid
-    ax['world'].grid(color='green')
+    glat.set_ticklabel_format('ddd')
+    glat.set_ticklabel_position('r')
+    glat.set_ticklabel_color('green')
+    glat.set_axislabel(None)
+    glat.show_gridlines(color='green')
 
     # Now show coordinate parameters for ecliptic grid
 
-    lon = ax['ecl'].coords[0]
-    lon.set_ticklabel_color('orange')
-    lon.grid(color='orange')
-    lon.set_axislabel('longitude', color='orange')
+    elon, elat = ax.get_coords_overlay(system='ecliptic')
 
-    lat = ax['ecl'].coords[1]
-    lat.set_ticklabel_color('blue')
-    lat.grid(color='blue')
-    lat.set_axislabel('latitude', color='blue')
+    elon.set_ticklabel_format('ddd')
+    elon.set_ticklabel_color('orange')
+    elon.show_gridlines(color='orange')
+    elon.set_axislabel('longitude', color='orange')
+
+    elat.set_ticklabel_format('ddd')
+    elat.set_ticklabel_color('blue')
+    elat.show_gridlines(color='blue')
+    elat.set_axislabel('latitude', color='blue')
 
     # Set title
     ax.set_title("WCS plate caree projection")
