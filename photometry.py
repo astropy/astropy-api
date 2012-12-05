@@ -195,7 +195,7 @@ results.write('photometry.xml', format='votable')  # VO table
 # For convenience, any object initializing the PSF class can be
 # passed directly to psf_photometry:
 
-results = psf_photometry(data, galactic, lambda x: np.sin(x) / x)
+results = psf_photometry(data, (x, y), lambda x: np.sin(x) / x)
 
 # PSF-fitting algorithm(s)
 # ------------------------
