@@ -190,7 +190,7 @@ ax.loglog(results['flux'], results['error'])
 
 results.write('photometry.txt', format='daophot')  # DAOphot table
 
-results.write('photometry.xml', format='vo')  # VO table
+results.write('photometry.xml', format='votable')  # VO table
 
 # For convenience, any object initializing the PSF class can be
 # passed directly to psf_photometry:
