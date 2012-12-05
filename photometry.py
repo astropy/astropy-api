@@ -28,6 +28,9 @@
 # * Allow users to easily define custom apertures and PSFs for use with the
 #   photometry routines.
 #
+# * Provide seamless integration with other Astropy components (WCS, tables,
+#   coordinates, unit conversion)
+#
 # Usage
 # =====
 #
