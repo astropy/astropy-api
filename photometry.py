@@ -273,6 +273,10 @@ results = psf_photometry(data, (x, y), psf)
 results_psf = image.psf_photometry((x, y), psf)
 results_ap = image.aperture_photometry((x, y), ap)
 
+# Since NDData arrays have units, one could envisage implementing automatic
+# unit conversion - for example if the array is in MJy/sr, the output fluxes
+# could be converted to Jy, which would save users a lot of work.
+
 # Integration with astropy.wcs and astropy.coordinates
 # ----------------------------------------------------
 
