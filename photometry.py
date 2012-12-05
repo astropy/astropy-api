@@ -286,7 +286,7 @@ results_ap = image.aperture_photometry((x, y), ap)
 # If and NDData object with WCS is passed to psf_photometry, then
 # non-pixel coordinates can be used:
 
-galactic = GalacticCoordinates([1.,2.,3.], [4.,5.,6.])
+galactic = GalacticCoordinates([1., 2., 3.], [4., 5., 6.])
 results = psf_photometry(data, galactic, psf)
 
 # The behavior of the rotation of the PSF will need to be well
