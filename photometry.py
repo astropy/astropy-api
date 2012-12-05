@@ -381,4 +381,21 @@ def my_median(a, weights):
     """Median of pixels more than halfway in aperture"""
     return np.median(a[weights > 0.5])
 
-aperture_photometry(image, (x, y), ap, statistic=my_median)
+# Source detection
+# ----------------
+
+# The above examples assume that positions are provided by the user, but the
+# user API should also include a function for source detection. Given the
+# diversity of available algorithms for this, it is difficult to define a single
+# API, but we could pre-implement common algorithms into a single function, with
+# keyword arguments depending on the algorithm:
+
+x, y = detect_sources(image, algorithm='daofind', threshold=4., nsigma=1.5)
+
+# We could also consider keeping each detection algorithm in a separate
+# function, and keeping these in `astropy.photometry.detection`. These methods
+# could also provide the ability to return world coordinates:
+
+fk5_coords = detect_sources(image, algorithm='daofind', coord_system='fk5')
+
+# which will return a FK5Coordinates object.
