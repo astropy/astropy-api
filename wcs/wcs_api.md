@@ -17,6 +17,10 @@ Authors
 * Thomas Robitaille (@astrofrog)
 * Jae-Joon Lee (@leejjoon)
 
+Thanks for feedback from:
+
+* Eli Bressert (@ebressert)
+
 Requirements
 ============
 
@@ -140,7 +144,8 @@ The user should set the slices to use when instantiating WCSAxes:
 
 In the above example, the first and third dimension will be used as the x
 and y pixel coordinates in the Axes, and the second pixel coordinate will be
-set to 4 (could also be set to a floating-point value).
+set to 4 (could also be set to a floating-point value). This could also be
+used on higher-dimension datasets.
 
 Info: we tried using separate dimensions= and slices= argument in APLpy (to
 separate the selection of dimensions from the slices) but since the two are
@@ -288,6 +293,9 @@ one command::
 
     ax.coords.show_gridlines()
 
+There should also be an option to show the labels inside the axes instead of
+on the side. This would be especially useful for all-sky projections.
+
 Patches/shapes/lines
 --------------------
 
@@ -343,8 +351,10 @@ or, more concisely,
 
     ax.coords.enable_offset_mode((12.14, 15.55))
 
-where the tuple should have the same number of dimensions as the WCS. To revert
-to absolute coordinates:
+where the tuple should have the same number of dimensions as the WCS. This
+causes the coordinates to have the offset value subtracted, so in the above
+case the point at ``(12.14, 15.55)`` would appear at ``(0, 0)``. To revert to
+absolute coordinates:
 
     ax.coords.disable_offset_mode()
 
