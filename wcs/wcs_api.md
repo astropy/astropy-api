@@ -20,6 +20,7 @@ Authors
 Thanks for feedback from:
 
 * Eli Bressert (@ebressert)
+* Chris Beaumont (@ChrisBeaumont)
 
 Requirements
 ============
@@ -57,6 +58,10 @@ We can also provide pyplot-style initialization:
     from astropy import wcs
     wcs.subplot(1, 1, 1, wcs=wcs.WCS('image.fits'))
     wcs.axes([0.1, 0.1, 0.8, 0.8], wcs=wcs.WCS('image.fits'))
+
+If no WCS transformation is specified, the transformation will default to
+identify, meaning that the WCSAxes object should then act like a normal Axes
+object.
 
 Coordinate systems
 ------------------
