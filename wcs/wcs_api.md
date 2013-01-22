@@ -31,6 +31,11 @@ The main requirements of the API are:
   will automatically set up the infrastructure to show the relevant ticks,
   labels, and grid.
 
+* The ``WCSAxes`` class should work with any arbitrary WCS, not just sky
+  coordinates, but also physical quantities. In addition, it should in the
+  long-term be able to work with the 'generalized' WCS being planned for
+  Astropy.
+
 * Make it easy for users to plot and overlay data in world coordinates, and
   in different coordinate systems.
 
@@ -39,12 +44,15 @@ The main requirements of the API are:
 Usage
 =====
 
+Items marked *Convenience* would be lower priority, and not strictly required
+for a functional API.
+
 Initialization
 --------------
 
 The object-oriented interface (similar for ``plt.figure()`` and the true OO
-API) uses a ``WCSAxes`` class which takes the same argument as Axes, but with an
-additional argument for the WCS object.
+API) uses a ``WCSAxes`` class which takes the same argument as Axes, but with
+an additional argument for the WCS object.
 
     import matplotlib.pyplot as plt
     from astropy.wcs import WCS, WCSAxes
@@ -70,8 +78,8 @@ As a convention, and to avoid any assumptions, if methods are called as:
 
     ax.method()
 
-then the method applies to pixel coordinates. To plot in world coordinates,
-one should use:
+then the method applies to pixel coordinates. To plot in the default world
+coordinates indicated in the WCS, one should use:
 
     ax['world'].method()
 
@@ -79,21 +87,31 @@ One can also explicitly specify pixel coordinates:
 
     ax['pixel'].method()
 
-If the two world coordinates corresponding to the pixel axes define sky
-coordinates, we can also use:
+By specifying a WCS object, one can also plot using data in different pixel
+coordinates that match to the same world coordinates (e.g. contours):
+
+    ax[wcs_object].method()
+
+and more generally, we can allow any transformation object (with an API to be
+determined) that can convert to the world coordinate system being used:
+
+    ax[transform].method()
+
+*Convenience*: If the two world coordinates corresponding to the pixel axes
+define sky coordinates, we can also use:
 
     ax[coordinate_system].method()
 
 We should have the following built-in sky coordinate systems:
 
-* 'fk4' or 'b1950': B1950 equatorial coordinates
-* 'fk5' or 'j2000': J2000 equatorial coordinates
-* 'gal' or 'galactic': Galactic coordinates
-* 'ecl' or 'ecliptic': Ecliptic coordinates
-* 'sgal' or 'supergalactic': Super-Galactic coordinates
+* ``'fk4'`` or ``'b1950'``: B1950 equatorial coordinates
+* ``'fk5'`` or ``'j2000'``: J2000 equatorial coordinates
+* ``'gal'`` or ``'galactic'``: Galactic coordinates
+* ``'ecl'`` or ``'ecliptic'``: Ecliptic coordinates
+* ``'sgal'`` or ``'supergalactic'``: Super-Galactic coordinates
 
-It would also be nice to allow users to define their own sky and non-sky
-coordinate transformation.
+These would be shorthand for a coordinate to default world coordinate
+conversion.
 
 Images
 ------
@@ -112,14 +130,15 @@ the image size, there would be no such thing as a 'mismatch' of dimensions
 compared to the WCS.
 
 In the case where we want to overplot an image with a different WCS
-projection, we could do e.g.:
+projection, the coordinate system API described above would allow us to do
+e.g.:
 
     ax[other_wcs].contour(scuba_image)
 
 Note that ``ax[other_wcs].imshow()`` would not work (due to matplotlib
 limitations).
 
-As a convenience, ``imshow``, ``contour``, and ``contourf`` should be able to
+*Convenience*: ``imshow``, ``contour``, and ``contourf`` should be able to
 read in data and WCS from FITS and image files::
 
     ax.imshow('image.fits')
@@ -127,8 +146,8 @@ read in data and WCS from FITS and image files::
     ax.contour('scuba.fits')
 
 which should automatically overlay it in the right WCS. However, if ``imshow``
-is given a file with a WCS transformation different from the one being used for
-the axes, then an exception should be raised.
+is given a file with a WCS transformation different from the one being used
+for the axes, then an exception should be raised.
 
 Multi-dimensional WCS objects
 -----------------------------
@@ -156,7 +175,7 @@ Info: we tried using separate dimensions= and slices= argument in APLpy (to
 separate the selection of dimensions from the slices) but since the two are
 closely related, an approach such as the above is simpler.
 
-Allowing the slice to be changed on the fly will make it easy to develop
+Allowing the slice to be changed on-the-fly will make it easy to develop
 for example a utility to slice through cubes without having to
 re-instantiate the ``WCSAxes`` object for each slice. To do this, we can use a
 VariableSlice() object:
@@ -208,6 +227,8 @@ or even:
 
     ra = ax.coords['ra']
 
+for common and recognized coordinate types.
+
 Tick label format
 -----------------
 
@@ -237,14 +258,14 @@ positions could be set manually:
 
 but users can also set the spacing explicitly:
 
-    ra.set_ticks(0.1)
+    ra.set_ticks(spacing=0.1)
 
 or can set the approximate number of ticks:
 
     ra.set_ticks(number=4)
 
 In the case of angles, it is often convenient to specify the spacing as a
-fraction of a degree - users should then use the units framework:
+fraction of a degree - users should then use the ``astropy.units`` framework:
 
     from astropy import units as u
     ra.set_ticks(5. * u.arcmin)
