@@ -17,6 +17,16 @@
 # * Rene Breton (@bretonr)
 # * David Shupe (@stargaser)
 #
+# Thanks for feedback from:
+#
+# * Adam Ginsburg (@keflavich)
+# * Marshall Perrin (@mperin)
+# * Megan Sosey (@sosey)
+# * Alex Conley (@aconley)
+# * Adrian Price-Whelan (@adrn)
+# * Christoph Deil (@cdeil)
+# * Perry Greenfield (@perrygreenfield)
+#
 # Requirements
 # ============
 #
@@ -245,6 +255,17 @@ results = psf_photometry(data, (x, y), psf)
 
 # If requested, return residuals
 results, residual = psf_photometry(data, (x, y), psf, residual=True)
+
+# Adding/removing PSFs from an image
+# ----------------------------------
+
+# In addition to being able to compute residuals as part of the photometry,
+# functions should be provided to add and remove PSFs from images (e.g. for
+# completeness studies):
+
+result = add_psf(data, (x, y), psf, flux)
+
+result = remove_psf(data, (x, y), psf, flux)
 
 # Integration with NDData
 # -----------------------
