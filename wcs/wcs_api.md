@@ -523,7 +523,8 @@ Example 4
 
     # Set tick and label properties
 
-    lon, lat = ax.coords
+    lon = ax.coords[0]
+    lat = ax.coords[1]
 
     lon.hide_ticks()  # no ticks visible in plot
     lon.set_major_formatter('ddd')
