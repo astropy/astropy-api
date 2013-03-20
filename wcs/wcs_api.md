@@ -151,7 +151,7 @@ Note that ``ax[other_wcs].imshow()`` would not work (due to matplotlib
 limitations).
 
 *Convenience*: ``imshow``, ``contour``, and ``contourf`` should be able to
-read in data and WCS from FITS and image files::
+read in data and WCS from FITS and image files:
 
     ax.imshow('image.fits')
     ax.imshow('image_rgb.png')
@@ -247,7 +247,7 @@ Tick label format
 The format of the tick labels can be specified with the
 ``set_major_formatter`` (and optionally ``set_minor_formatter`` if desired),
 that would either accept a standard Matplotlib ``Formatter`` object, or a
-string describing the format::
+string describing the format:
 
     ra.set_major_formatter('x.xxx')  # decimal, non-angle coordinates,
                                       # 3 decimal places
@@ -289,11 +289,11 @@ fraction of a degree - users should then use the ``astropy.units`` framework:
 
 This is to avoid roundoff errors.
 
-Note: allowing users to specify their own tick position or spacing,
-and the label format raises the issue of what happens when the value cannot
-be well represented by the format (this confused a lot of users in APLpy
-initially). For example, if one specifies the format to be 'dd:mm:ss' and a
-tick spacing of 0.001 degrees then the ticks will go:
+Note: allowing users to specify their own tick position or spacing, and the
+label format raises the issue of what happens when the value cannot be well
+represented by the format (this confused a lot of users in APLpy initially).
+For example, if one specifies the format to be ``'dd:mm:ss'`` and a tick
+spacing of 0.001 degrees then the ticks will go:
 
     13:42:00
     13:42:01
@@ -305,7 +305,7 @@ and so on, which confuses users. In APLpy, we now raise an exception if the
 tick spacing is not compatible with the labeling, but it might be best to
 simply clip to the nearest value and emit an INFO message. If a tick spacing
 is not specified, the minimum tick spacing should be set by the minimum one
-representable by the format. For example, if the format is set to 'dd:mm',
+representable by the format. For example, if the format is set to ``'dd:mm'``,
 then the default tick spacing cannot end up being smaller than 1' (and if it
 does it gets reset to 1').
 
@@ -319,23 +319,23 @@ for declination with:
 
     ra = ax.coords['ra']
     dec = ax.coords['dec']
-    ra.show_gridlines(color='blue')
-    dec.show_gridlines(color='red')
+    ra.grid(color='blue')
+    dec.grid(color='red')
 
 and to modify the visual properties of the grid, users can capture a
 handle to the grid lines:
 
-    lines = dec.show_gridlines(color='red')
+    lines = dec.grid(color='red')
 
-which is simply a ``LineCollection``, which can be modified::
+which is simply a ``LineCollection``, which can be modified:
 
     lines.set_alpha(0.5)
     lines.set_linewidth(2)
 
 For convenience, users can also simply draw a grid for all the coordinates in
-one command::
+one command:
 
-    ax.coords.show_gridlines()
+    ax.coords.grid()
 
 There should also be an option to show the labels inside the axes instead of
 on the side. This would be especially useful for all-sky projections.
@@ -433,7 +433,7 @@ Example 1
     ax.imshow(hdu.data, cmap=plt.cm.gist_heat, vmin=-1., vmax=10.)
 
     # Add the grid
-    g = ax.coords.show_gridlines()
+    g = ax.coords.grid()
     g.set_color('white')
     g.set_alpha(0.25)
 
@@ -497,14 +497,14 @@ Example 3
     ra.set_ticklabel_position('lb')  # left and bottom
     ra.set_axislabel_position('lb')
     ra.set_axislabel('Right ascension')
-    ra.show_gridlines()
+    ra.grid()
 
     dec.hide_ticks()  # no ticks visible in plot
     dec.set_major_formatter('dd:mm:ss.ss')
     dec.set_ticklabel_position('tr')  # top and right
     dec.set_axislabel_position('tr')
     dec.set_axislabel('Declination')
-    dec.show_gridlines()
+    dec.grid()
 
     # Save image
     fig.savefig('example3.png')
@@ -532,7 +532,7 @@ Example 4
     lon.set_axislabel_position('tb')
     lon.set_axislabel_color('orange')
     lon.set_spacing(number=2)
-    lon.show_gridlines(color='orange')
+    lon.grid(color='orange')
 
     lat.hide_ticks()  # no ticks visible in plot
     lat.set_major_formatter('ddd')
@@ -541,7 +541,7 @@ Example 4
     lat.set_axislabel('latitude')
     lon.set_axislabel_color('blue')
     lon.set_spacing(30.)
-    lon.show_gridlines(color='blue')
+    lon.grid(color='blue')
 
     # Set title
     ax.set_title("WCS conic equal area projection", color='aqua')
@@ -572,13 +572,13 @@ Example 5
     glon.set_ticklabel_position('t')
     glon.set_ticklabel_color('green')
     glon.set_axislabel(None)
-    glon.show_gridlines(color='green')
+    glon.grid(color='green')
 
     glat.set_major_formatter('ddd')
     glat.set_ticklabel_position('r')
     glat.set_ticklabel_color('green')
     glat.set_axislabel(None)
-    glat.show_gridlines(color='green')
+    glat.grid(color='green')
 
     # Now show coordinate parameters for ecliptic grid
 
@@ -586,12 +586,12 @@ Example 5
 
     elon.set_major_formatter('ddd')
     elon.set_ticklabel_color('orange')
-    elon.show_gridlines(color='orange')
+    elon.grid(color='orange')
     elon.set_axislabel('longitude', color='orange')
 
     elat.set_major_formatter('ddd')
     elat.set_ticklabel_color('blue')
-    elat.show_gridlines(color='blue')
+    elat.grid(color='blue')
     elat.set_axislabel('latitude', color='blue')
 
     # Set title
