@@ -21,6 +21,10 @@ Thanks for feedback from:
 
 * Eli Bressert (@ebressert)
 * Chris Beaumont (@ChrisBeaumont)
+* Adam Ginsburg (@keflavich)
+* Mike Droettboom (@mdboom)
+* Phil Elson (@pelson)
+* Moritz Guenther (@hamogu)
 
 Requirements
 ============
@@ -61,14 +65,20 @@ an additional argument for the WCS object.
     ax = WCSAxes(fig, [0.1, 0.1, 0.8, 0.8], wcs=WCS('image.fits'))
     fig.add_axes(ax)
 
-We can also provide pyplot-style initialization:
+We can also provide pyplot-style initialization with the ``projection`` keyword:
 
     from astropy import wcs
-    wcs.subplot(1, 1, 1, wcs=wcs.WCS('image.fits'))
-    wcs.axes([0.1, 0.1, 0.8, 0.8], wcs=wcs.WCS('image.fits'))
+    fig = plt.figure()
+    ax = fig.add_subplot(1, 1, 1, projection=wcs.WCS('image.fits'))
+
+or:
+
+    from astropy import wcs
+    fig = plt.figure()
+    ax = fig.add_axes([0.1, 0.1, 0.8, 0.8], projection=wcs.WCS('image.fits'))
 
 If no WCS transformation is specified, the transformation will default to
-identify, meaning that the WCSAxes object should then act like a normal Axes
+identity, meaning that the WCSAxes object should then act like a normal Axes
 object.
 
 Coordinate systems
@@ -97,8 +107,10 @@ determined) that can convert to the world coordinate system being used:
 
     ax[transform].method()
 
-*Convenience*: If the two world coordinates corresponding to the pixel axes
-define sky coordinates, we can also use:
+This should also support vanilla Matplotlib transformations.
+
+*Convenience*: If the world coordinate system of the plot is a celestial
+coordinate system, we can also use:
 
     ax[coordinate_system].method()
 
@@ -129,8 +141,8 @@ Since WCS information technically doesn't require any information about
 the image size, there would be no such thing as a 'mismatch' of dimensions
 compared to the WCS.
 
-In the case where we want to overplot an image with a different WCS
-projection, the coordinate system API described above would allow us to do
+In the case where we want to overplot an image as contours with a different
+WCS projection, the coordinate system API described above would allow us to do
 e.g.:
 
     ax[other_wcs].contour(scuba_image)
@@ -146,8 +158,8 @@ read in data and WCS from FITS and image files::
     ax.contour('scuba.fits')
 
 which should automatically overlay it in the right WCS. However, if ``imshow``
-is given a file with a WCS transformation different from the one being used
-for the axes, then an exception should be raised.
+is given a FITS file with a WCS transformation different from the one being
+used for the axes, then an exception should be raised.
 
 Multi-dimensional WCS objects
 -----------------------------
@@ -206,17 +218,17 @@ propose a new API, which allows very flexible customization of plots:
     ra = ax.coords[0]
 
     # Show ticks for this coordinate on the bottom and right axes
-    ra.set_tick_location('br')
+    ra.set_ticks_position('br')
 
     # Show tick labels only for the bottom axis
-    ra.set_ticklabel_location('b')
+    ra.set_ticklabel_position('b')
 
     # Set the format of the tick labels
-    ra.set_ticklabel_format('hh:mm:ss')
+    ra.set_major_formatter('hh:mm:ss')
 
     # Set the spacing of the ticks
     from astropy import units as u
-    ra.set_tick_spacing(2. * u.arcmin)
+    ra.set_ticks_spacing(2. * u.arcmin)
 
 and so on - we can also consider allowing aliases to certain coordinates, for
 example:
@@ -232,20 +244,25 @@ for common and recognized coordinate types.
 Tick label format
 -----------------
 
-The format of the tick labels can be specified with:
+The format of the tick labels can be specified with the
+``set_major_formatter`` (and optionally ``set_minor_formatter`` if desired),
+that would either accept a standard Matplotlib ``Formatter`` object, or a
+string describing the format::
 
-    ra.set_ticklabel_format('x.xxx')  # decimal, non-angle coordinates,
+    ra.set_major_formatter('x.xxx')  # decimal, non-angle coordinates,
                                       # 3 decimal places
 
-    ra.set_ticklabel_format('d.ddddd')  # decimal degrees, 5 decimal places
+    ra.set_major_formatter('d')  # decimal degrees, no decimal places
 
-    ra.set_ticklabel_format('dd:mm')  # sexagesimal, 1' precision
-    ra.set_ticklabel_format('dd:mm:ss')  # sexagesimal, 1" precision
-    ra.set_ticklabel_format('dd:mm:ss.ss')  # sexagesimal, 0.01" precision
+    ra.set_major_formatter('d.ddddd')  # decimal degrees, 5 decimal places
 
-    ra.set_ticklabel_format('hh:mm')  # sexagesimal (hours)
-    ra.set_ticklabel_format('hh:mm:ss')  # sexagesimal (hours)
-    ra.set_ticklabel_format('hh:mm:ss.ss')  # sexagesimal (hours)
+    ra.set_major_formatter('dd:mm')  # sexagesimal, 1' precision
+    ra.set_major_formatter('dd:mm:ss')  # sexagesimal, 1" precision
+    ra.set_major_formatter('dd:mm:ss.ss')  # sexagesimal, 0.01" precision
+
+    ra.set_major_formatter('hh:mm')  # sexagesimal (hours)
+    ra.set_major_formatter('hh:mm:ss')  # sexagesimal (hours)
+    ra.set_major_formatter('hh:mm:ss.ss')  # sexagesimal (hours)
 
 Tick/label spacing
 ------------------
@@ -300,7 +317,8 @@ ticks and labels, grid lines 'belong' to the coordinate objects described
 above. For example, one can show a grid with red lines for RA and blue lines
 for declination with:
 
-    ra, dec = ax.coords
+    ra = ax.coords['ra']
+    dec = ax.coords['dec']
     ra.show_gridlines(color='blue')
     dec.show_gridlines(color='red')
 
@@ -362,7 +380,7 @@ label, tick, and grid line properties.
 To hide the labels, ticks, and grid lines for the default coordinate system,
 one can do:
 
-    ax.coords.hide()
+    ax.coords.set_visible(False)
 
 Offset systems
 --------------
@@ -474,17 +492,18 @@ Example 3
 
     # Set tick and label properties
 
-    ra, dec = ax.coords
+    ra = ax.coords['ra']
+    dec = ax.coords['dec]
 
     ra.hide_ticks()  # no ticks visible in plot
-    ra.set_ticklabel_format('hh')
+    ra.set_major_formatter('hh')
     ra.set_ticklabel_position('lb')  # left and bottom
     ra.set_axislabel_position('lb')
     ra.set_axislabel('Right ascension')
     ra.show_gridlines()
 
     dec.hide_ticks()  # no ticks visible in plot
-    dec.set_ticklabel_format('dd:mm:ss.ss')
+    dec.set_major_formatter('dd:mm:ss.ss')
     dec.set_ticklabel_position('tr')  # top and right
     dec.set_axislabel_position('tr')
     dec.set_axislabel('Declination')
@@ -511,7 +530,7 @@ Example 4
     lon, lat = ax.coords
 
     lon.hide_ticks()  # no ticks visible in plot
-    lon.set_ticklabel_format('ddd')
+    lon.set_major_formatter('ddd')
     lon.set_ticklabel_position('tb')  # top and bottom
     lon.set_axislabel_position('tb')
     lon.set_axislabel_color('orange')
@@ -519,7 +538,7 @@ Example 4
     lon.show_gridlines(color='orange')
 
     lat.hide_ticks()  # no ticks visible in plot
-    lat.set_ticklabel_format('ddd')
+    lat.set_major_formatter('ddd')
     lat.set_ticklabel_position('lr')  # top and right
     lat.set_axislabel_position('lr')
     lat.set_axislabel('latitude')
@@ -552,13 +571,13 @@ Example 5
 
     glon, glat = ax.coords  # only two coordinates, so can be concise
 
-    glon.set_ticklabel_format('ddd')
+    glon.set_major_formatter('ddd')
     glon.set_ticklabel_position('t')
     glon.set_ticklabel_color('green')
     glon.set_axislabel(None)
     glon.show_gridlines(color='green')
 
-    glat.set_ticklabel_format('ddd')
+    glat.set_major_formatter('ddd')
     glat.set_ticklabel_position('r')
     glat.set_ticklabel_color('green')
     glat.set_axislabel(None)
@@ -568,12 +587,12 @@ Example 5
 
     elon, elat = ax.get_coords_overlay(system='ecliptic')
 
-    elon.set_ticklabel_format('ddd')
+    elon.set_major_formatter('ddd')
     elon.set_ticklabel_color('orange')
     elon.show_gridlines(color='orange')
     elon.set_axislabel('longitude', color='orange')
 
-    elat.set_ticklabel_format('ddd')
+    elat.set_major_formatter('ddd')
     elat.set_ticklabel_color('blue')
     elat.show_gridlines(color='blue')
     elat.set_axislabel('latitude', color='blue')
