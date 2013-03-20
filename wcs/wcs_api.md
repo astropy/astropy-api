@@ -424,8 +424,7 @@ Example 1
 
     # Initialize figure
     fig = plt.figure()
-    ax = WCSAxes(fig, [0.1, 0.1, 0.8, 0.8], wcs=WCS(hdu.header))
-    fig.add_axes(ax)
+    ax = fig.add_axes([0.1, 0.1, 0.8, 0.8], projection=WCS(hdu.header))
 
     # By default, the correct coordinate system will be shown on the x and y
     # axis, and the labels will be set based on the WCS coordinate system.
@@ -458,8 +457,7 @@ Example 2
 
     # Initialize figure
     fig = plt.figure()
-    ax = WCSAxes(fig, [0.1, 0.1, 0.8, 0.8], wcs=wcs_rgb)
-    fig.add_axes(ax)
+    ax = fig.add_axes([0.1, 0.1, 0.8, 0.8], projection=wcs_rgb)
 
     # By default, the correct coordinate system will be shown on the x and y
     # axis, and the labels will be set based on the WCS coordinate system.
@@ -487,8 +485,7 @@ Example 3
 
     # Initialize figure
     fig = plt.figure()
-    ax = WCSAxes(fig, [0.1, 0.1, 0.8, 0.8], wcs=WCS('image.fits'))
-    fig.add_axes(ax)
+    ax = fig.add_axes([0.1, 0.1, 0.8, 0.8], projection=WCS('image.fits'))
 
     # Set tick and label properties
 
@@ -522,8 +519,7 @@ Example 4
 
     # Initialize figure
     fig = plt.figure()
-    ax = WCSAxes(fig, [0.1, 0.1, 0.8, 0.8], wcs=WCS('image.fits'))
-    fig.add_axes(ax)
+    ax = fig.add_axes([0.1, 0.1, 0.8, 0.8], projection=WCS('image.fits'))
 
     # Set tick and label properties
 
@@ -564,12 +560,12 @@ Example 5
 
     # Initialize figure
     fig = plt.figure()
-    ax_gal = WCSAxes(fig, [0.1, 0.1, 0.8, 0.8], wcs=WCS('image.fits'))
-    fig.add_axes(ax_gal)
+    ax = fig.add_axes([0.1, 0.1, 0.8, 0.8], projection=WCS('image.fits'))
 
     # Set tick and label properties
 
-    glon, glat = ax.coords  # only two coordinates, so can be concise
+    glon = ax.coords['glon']
+    glat = ax.coords['glat']
 
     glon.set_major_formatter('ddd')
     glon.set_ticklabel_position('t')
