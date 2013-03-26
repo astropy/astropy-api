@@ -65,6 +65,10 @@ an additional argument for the WCS object.
     ax = WCSAxes(fig, [0.1, 0.1, 0.8, 0.8], wcs=WCS('image.fits'))
     fig.add_axes(ax)
 
+If no WCS transformation is specified, the transformation will default to
+identity, meaning that the WCSAxes object should then act like a normal Axes
+object.
+
 We can also provide pyplot-style initialization with the ``projection`` keyword:
 
     from astropy import wcs
@@ -76,10 +80,6 @@ or:
     from astropy import wcs
     fig = plt.figure()
     ax = fig.add_axes([0.1, 0.1, 0.8, 0.8], projection=wcs.WCS('image.fits'))
-
-If no WCS transformation is specified, the transformation will default to
-identity, meaning that the WCSAxes object should then act like a normal Axes
-object.
 
 Coordinate systems
 ------------------
@@ -160,48 +160,6 @@ read in data and WCS from FITS and image files:
 which should automatically overlay it in the right WCS. However, if ``imshow``
 is given a FITS file with a WCS transformation different from the one being
 used for the axes, then an exception should be raised.
-
-Multi-dimensional WCS objects
------------------------------
-
-The WCS object can have more than two dimensions, but since we are ultimately
-plotting two-dimensional data, we have to select which dimensions are used for
-the x and y pixel coordinates in the axes, and we also have to select which
-slices are selected for the dimensions that are not being shown. We can try
-and encapsulate this in a single 'slice' argument which should be specified as
-a list, and where each element is either an integer (indicating the slice
-position) or a string containing 'x' or 'y', indicating the dimension that
-should be used for the x and y pixel coordinates.
-
-The user should set the slices to use when instantiating WCSAxes:
-
-    ax = WCSAxes(fig, [0.1, 0.1, 0.8, 0.8], wcs=WCS('cube.fits'),
-                 slice=['x', 3, 'y'])
-
-In the above example, the first and third dimension will be used as the x
-and y pixel coordinates in the Axes, and the second pixel coordinate will be
-set to 4 (could also be set to a floating-point value). This could also be
-used on higher-dimension datasets.
-
-Info: we tried using separate dimensions= and slices= argument in APLpy (to
-separate the selection of dimensions from the slices) but since the two are
-closely related, an approach such as the above is simpler.
-
-Allowing the slice to be changed on-the-fly will make it easy to develop
-for example a utility to slice through cubes without having to
-re-instantiate the ``WCSAxes`` object for each slice. To do this, we can use a
-VariableSlice() object:
-
-    v_slice = VariableSlice()
-
-    ax = WCSAxes(fig, [0.1, 0.1, 0.8, 0.8], wcs=WCS('cube.fits'),
-                 slice=['x', v_slice, 'y'])
-
-Subsequent calls to e.g.
-
-    v_slice.set(3)
-
-would then force the axes to refresh.
 
 Ticks and tick label properties
 -------------------------------
@@ -401,6 +359,29 @@ case the point at ``(12.14, 15.55)`` would appear at ``(0, 0)``. To revert to
 absolute coordinates:
 
     ax.coords.disable_offset_mode()
+
+Multi-dimensional datasets
+--------------------------
+
+The WCS object can have more than two dimensions, but since we are ultimately
+plotting two-dimensional data, we have to select which dimensions are used for
+the x and y pixel coordinates in the axes, and we also have to select which
+slices are selected for the dimensions that are not being shown.
+
+We should try and implement this at the level of the WCS class - that is, it
+should be possible to slice WCS objects and return a new WCS object with lower
+dimensionality. One way to do this would be to have a ``WCS.slice()`` method
+that would take a single 'slice' argument which should be specified as a list,
+and where each element is either an integer (indicating the slice position) or
+a string containing 'x' or 'y', indicating the dimension that should be used
+for the x and y pixel coordinates. For example, if one does:
+
+    wcs_new = wcs.slice=(['x', 3, 'y'])
+
+the first and third dimension will be used as the x and y pixel coordinates in
+the Axes, and the second pixel coordinate will be set to 4 (could also be set
+to a floating-point value). This could also be used on higher-dimension
+datasets.
 
 Examples
 ========
