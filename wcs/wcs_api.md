@@ -86,33 +86,33 @@ Coordinate systems
 
 As a convention, and to avoid any assumptions, if methods are called as:
 
-    ax.method()
+    ax.method(...)
 
 then the method applies to pixel coordinates. To plot in the default world
 coordinates indicated in the WCS, one should use:
 
-    ax['world'].method()
+    ax.method(..., transform='world')
 
 One can also explicitly specify pixel coordinates:
 
-    ax['pixel'].method()
+    ax.method(..., transform='pixel')
 
 By specifying a WCS object, one can also plot using data in different pixel
 coordinates that match to the same world coordinates (e.g. contours):
 
-    ax[wcs_object].method()
+    ax.method(..., transform=wcs_object)
 
 and more generally, we can allow any transformation object (with an API to be
 determined) that can convert to the world coordinate system being used:
 
-    ax[transform].method()
+    ax.method(..., transform=transform)
 
 This should also support vanilla Matplotlib transformations.
 
 *Convenience*: If the world coordinate system of the plot is a celestial
 coordinate system, we can also use:
 
-    ax[coordinate_system].method()
+    ax.method(..., transform=coordinate_system)
 
 We should have the following built-in sky coordinate systems:
 
@@ -122,8 +122,8 @@ We should have the following built-in sky coordinate systems:
 * ``'ecl'`` or ``'ecliptic'``: Ecliptic coordinates
 * ``'sgal'`` or ``'supergalactic'``: Super-Galactic coordinates
 
-These would be shorthand for a coordinate to default world coordinate
-conversion.
+Additional keywords may be required in these cases to specify e.g. observation
+epochs and equinoxes.
 
 Images
 ------
@@ -145,10 +145,10 @@ In the case where we want to overplot an image as contours with a different
 WCS projection, the coordinate system API described above would allow us to do
 e.g.:
 
-    ax[other_wcs].contour(scuba_image)
+    ax.contour(scuba_image, transform=other_wcs)
 
-Note that ``ax[other_wcs].imshow()`` would not work (due to matplotlib
-limitations).
+Note that ``ax.imshow(..., transform=other_wcs)`` would not work (due to
+matplotlib limitations).
 
 *Convenience*: ``imshow``, ``contour``, and ``contourf`` should be able to
 read in data and WCS from FITS and image files:
@@ -347,22 +347,22 @@ To overlay arbitrary matplotlib patches in pixel coordinates:
 
     from matplotlib.patches import Rectangle
     r = Rectangle((43., 44.), 23., 11.)
-    ax['pixel'].add_patch(r)
+    ax.add_patch(r)
 
 To overlay arbitrary matplotlib patches in world coordinates:
 
     from matplotlib.patches import Rectangle
     r = Rectangle((272., -44.), 1., 0.8)
-    ax['fk5'].add_patch(r)
+    ax.add_patch(r, transform='fk5')
 
 And similarly:
 
-    ax['gal'].add_collection(c)
-    ax['fk4'].add_line(l)
+    ax.add_collection(c, transform='gal')
+    ax.add_line(l, transform='fk4')
 
 The same applies to normal plotting methods such as scatter/plot/etc:
 
-    ax['gal'].scatter(l, b)
+    ax.scatter(l, b, transform='gal')
 
 Multiple coordinate systems
 ---------------------------
@@ -470,7 +470,7 @@ Example 2
 
     # Overlay a catalog from coordinates in KF4
     cat = Table.read('source_catalog.tbl', format='ipac')
-    ax['gal'].scatter(cat['GLON'], cat['GLAT'], edgecolor='red',facecolor='none')
+    ax.scatter(cat['GLON'], cat['GLAT'], edgecolor='red', facecolor='none', transform='gal')
 
     # Save image
     fig.savefig('example2.png')
