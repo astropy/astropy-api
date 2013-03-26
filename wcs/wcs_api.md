@@ -376,7 +376,7 @@ and where each element is either an integer (indicating the slice position) or
 a string containing 'x' or 'y', indicating the dimension that should be used
 for the x and y pixel coordinates. For example, if one does:
 
-    wcs_new = wcs.slice=(['x', 3, 'y'])
+    wcs_new = wcs.slice(['x', 3, 'y'])
 
 the first and third dimension will be used as the x and y pixel coordinates in
 the Axes, and the second pixel coordinate will be set to 4 (could also be set
