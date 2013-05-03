@@ -102,13 +102,13 @@ To plot in the FK5 system one would then do:
 
 To plot in the default world coordinates system, one should use:
 
-    tr = ax.get_transform("world")
+    ax.get_transform("world")
 
 By specifying a WCS object, one can also define a transformation from the
 current WCS system to another file's WCS system, allowing e.g. overplotting of
 contours in a different system:
 
-    tr = ax.get_transform(<WCS instance>)
+    ax.get_transform(<WCS instance>)
 
 If the world coordinate system of the plot is a celestial coordinate system,
 the following built-in sky coordinate systems would be available from the
