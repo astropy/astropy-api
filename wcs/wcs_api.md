@@ -88,33 +88,31 @@ As a convention, and to avoid any assumptions, if methods are called as:
 
     ax.method(...)
 
-then the method applies to pixel coordinates. To plot in the default world
-coordinates indicated in the WCS, one should use:
+then the method applies to pixel coordinates. However, in general it will be
+useful to be able to plot object in various world coordinate systems.
+Matplotlib already supports plotting with arbitrary transformations, so a
+method of ``WCSAxes`` will be available to give a transformation that can be
+directly used by Matplotlib:
 
-    ax.method(..., transform='world')
+    tr_fk5 = ax.get_transform("fk5")  # returns a matplotlib.transforms.Transform instance
 
-One can also explicitly specify pixel coordinates:
+To plot in the FK5 system one would then do:
 
-    ax.method(..., transform='pixel')
+    ax.method(..., transform=tr_fk5)
 
-By specifying a WCS object, one can also plot using data in different pixel
-coordinates that match to the same world coordinates (e.g. contours):
+To plot in the default world coordinates system, one should use:
 
-    ax.method(..., transform=wcs_object)
+    tr = ax.get_transform("world")
 
-and more generally, we can allow any transformation object (with an API to be
-determined) that can convert to the world coordinate system being used:
+By specifying a WCS object, one can also define a transformation from the
+current WCS system to another file's WCS system, allowing e.g. overplotting of
+contours in a different system:
 
-    ax.method(..., transform=transform)
+    tr = ax.get_transform(<WCS instance>)
 
-This should also support vanilla Matplotlib transformations.
-
-*Convenience*: If the world coordinate system of the plot is a celestial
-coordinate system, we can also use:
-
-    ax.method(..., transform=coordinate_system)
-
-We should have the following built-in sky coordinate systems:
+If the world coordinate system of the plot is a celestial coordinate system,
+the following built-in sky coordinate systems would be available from the
+``get_transform`` method:
 
 * ``'fk4'`` or ``'b1950'``: B1950 equatorial coordinates
 * ``'fk5'`` or ``'j2000'``: J2000 equatorial coordinates
@@ -145,10 +143,10 @@ In the case where we want to overplot an image as contours with a different
 WCS projection, the coordinate system API described above would allow us to do
 e.g.:
 
-    ax.contour(scuba_image, transform=other_wcs)
+    ax.contour(scuba_image, transform=ax.get_transform(other_wcs))
 
-Note that ``ax.imshow(..., transform=other_wcs)`` would not work (due to
-matplotlib limitations).
+Note that ``ax.imshow(..., transform=ax.get_transform(other_wcs))`` would not
+work (due to matplotlib limitations).
 
 *Convenience*: ``imshow``, ``contour``, and ``contourf`` should be able to
 read in data and WCS from FITS and image files:
@@ -311,16 +309,16 @@ To overlay arbitrary matplotlib patches in world coordinates:
 
     from matplotlib.patches import Rectangle
     r = Rectangle((272., -44.), 1., 0.8)
-    ax.add_patch(r, transform='fk5')
+    ax.add_patch(r, transform=ax.get_transform('fk5'))
 
 And similarly:
 
-    ax.add_collection(c, transform='gal')
-    ax.add_line(l, transform='fk4')
+    ax.add_collection(c, transform=ax.get_transform('gal'))
+    ax.add_line(l, transform=ax.get_transform('fk4'))
 
 The same applies to normal plotting methods such as scatter/plot/etc:
 
-    ax.scatter(l, b, transform='gal')
+    ax.scatter(l, b, transform=ax.get_transform('gal'))
 
 Multiple coordinate systems
 ---------------------------
@@ -451,7 +449,7 @@ Example 2
 
     # Overlay a catalog from coordinates in KF4
     cat = Table.read('source_catalog.tbl', format='ipac')
-    ax.scatter(cat['GLON'], cat['GLAT'], edgecolor='red', facecolor='none', transform='gal')
+    ax.scatter(cat['GLON'], cat['GLAT'], edgecolor='red', facecolor='none', transform=ax.get_transform('gal'))
 
     # Save image
     fig.savefig('example2.png')
