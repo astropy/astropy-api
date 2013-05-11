@@ -25,6 +25,7 @@ Thanks for feedback from:
 * Mike Droettboom (@mdboom)
 * Phil Elson (@pelson)
 * Moritz Guenther (@hamogu)
+* Erik Tollerud (@eteq)
 
 Requirements
 ============
@@ -69,7 +70,8 @@ If no WCS transformation is specified, the transformation will default to
 identity, meaning that the WCSAxes object should then act like a normal Axes
 object.
 
-We can also provide pyplot-style initialization with the ``projection`` keyword:
+We can also provide standard Matplotlib axes initialization with the
+``projection`` keyword:
 
     from astropy import wcs
     fig = plt.figure()
@@ -80,6 +82,10 @@ or:
     from astropy import wcs
     fig = plt.figure()
     ax = fig.add_axes([0.1, 0.1, 0.8, 0.8], projection=wcs.WCS('image.fits'))
+
+
+This should also work with the interactive pyplot interface, and the
+full-object oriented API.
 
 Coordinate systems
 ------------------
