@@ -22,20 +22,25 @@ with raises(ValueError):
 c2 = c.SphericalRepresentation(lat=[5, 6]*u.deg, lon=[8, 9]*u.hour, distance=10*u.kpc)  # if distance is a scalar, assume that's meant for all the angles
 assert len(c2.distance) == 2
 
+#OPTION: have the representation objects handle strings and lists of strings.
+#if this option is *not* accepted, instead it will be in the "high-level"
+#class discussed at the bottom of this document
 c2 = c.SphericalRepresentation('5:10:20.52 +23:23:23.5', units=(u.hourangle, u.degree))
 # In the current API, `unit` is confusing because sometimes it's one object and sometimes two (issue #1421).
 # But because this is the *only* time `units` is meaningful, it's ok here
 assert c2.lon.units == u.hourangle
 
-#OPTION: add store_as keyword, as discussed in #1421
-c2 = c.SphericalRepresentation('5:10:20.52 +23:23:23.5', units=(u.hourangle, u.degree), store_as=(u.radian, u.radian))
-assert c2.lon.units == u.radian
-#end OPTION
-
 with raises(ValueError):
     c.SphericalRepresentation('5:10:20.52 +23:23:23.5')  # this is ambiguous so it fails
 
-#regardless of how input, they come out as angle/distance
+#a `store_as` option is important for some cases - see astropy/astropy#1421 for justification
+c2 = c.SphericalRepresentation('5:10:20.52 +23:23:23.5', units=(u.hourangle, u.degree), store_as=(u.radian, u.radian))
+assert c2.lon.units == u.radian
+
+#end OPTION
+
+
+#regardless of how input, the `lat` and `lon` come out as angle/distance
 assert isinstance(c1.lat, c.Angle)
 assert isinstance(c1.distance, c.Distance)
 
@@ -73,7 +78,7 @@ with raises(UnitsError):
 c.CartesianRepresentation(x=randn(100), y=randn(100), z=randn(100), units=u.kpc)
 #end OPTION
 
-#Future extensions: add more representations like cylindrical or elliptical
+#Future extensions: add additional useful representations like cylindrical or elliptical
 
 
 
@@ -124,9 +129,21 @@ assert fk5.dec == 8*u.hour
 
 assert icrs.preferred_representation == c.SphericalRepresentation
 
-#the frames can also be initialized with the preferred names:
+#low-level classes can also be initialized with the preferred names:
 icrs_2 = c.ICRS(ra=8*u.hour, dec=5*u.deg, distance=1*u.kpc)
 assert icrs == icrs2
+
+
+#they also are capable of computing on-sky or 3d separations from each other,
+#which will be a direct port of the existing methods:
+coo1 = c.ICRS(ra=0*u.hour, dec=0*u.deg)
+coo2 = c.ICRS(ra=0*u.hour, dec=1*u.deg)
+assert coo1.separation(coo2).degree == 1.0  # on-sky separation
+
+coo3 = c.ICRS(ra=0*u.hour, dec=0*u.deg, distance=1*u.kpc)
+coo4  = c.ICRS(ra=0*u.hour, dec=0*u.deg, distance=2*u.kpc)
+assert coo3.separation_3d(coo4).kpc == 1.0  # 3d separation
+assert coo1.separation_3d(coo2).kpc == 1.0  # ValueError: coo1 and coo2 don't have distances
 
 
 #the frames also know how to give a reasonable-looking string of themselves,
@@ -171,8 +188,9 @@ assert fk5_2.ra == fk5_trans_2.ra  # Now all is fine because same equinox
 #Trying to tansforming a frame with no data is of course an error:
 c.FK5(equinox=J2001).transform_to(c.ICRS)  # ValueError
 
-#To actually define a new transformation, the same basic scheme as in the
-#0.2/0.3 coordinates framework is used - a graph of transform functions
+
+#To actually define a new transformation, the same scheme as in the
+#0.2/0.3 coordinates framework can be re-used - a graph of transform functions
 #connecting various coordinate classes together.  The main changes are:
 # 1) The transform functions now get the frame object they are trasnforming the
 #    current data into.
@@ -188,6 +206,19 @@ def new_to_fk5(newobj, fk5frame):
     # the `newobj` frame as observed at `ot` to FK5 an equinox `eq`
     return matrix
 
+#other options for transform functions include one that simply returns the new
+#coordinate object, and one that returns a cartesian matrix but does *not*
+#require `newobj` or `fk5frame` - this allows more optimization of the transform
 
 
 #<---------------------------"High-level" class-------------------------------->
+#The "high-level" class is intended to wrap the lower-level classes in such a
+#way that they can be round-tripped, as well as providing a variety of convenience
+#functionality.  This document is not intended to show *all* of the high-level
+#functionality, instead it shows how the high-level classes interact with the
+#low-level classes
+
+#the existing `from_name` and `match_to_catalog_*` methods will be moved to the
+#high-level class as "convinience" functionality.
+
+
