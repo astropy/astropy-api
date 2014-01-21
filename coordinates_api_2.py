@@ -133,6 +133,9 @@ assert icrs.preferred_representation == c.SphericalRepresentation
 icrs_2 = c.ICRS(ra=8*u.hour, dec=5*u.deg, distance=1*u.kpc)
 assert icrs == icrs2
 
+#and these are taken as the default if keywords are not given:
+icrs_nokwarg = c.ICRS(8*u.hour, 5*u.deg, distance=1*u.kpc)
+assert icrs_nokwarg.ra == icrs_2.ra and icrs_nokwarg.dec == icrs_2.dec
 
 #they also are capable of computing on-sky or 3d separations from each other,
 #which will be a direct port of the existing methods:
