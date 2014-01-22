@@ -258,9 +258,10 @@ sc = coords.SkyCoordinate('8:00:00 +5:00:00.0', unit=(u.hour, u.deg), system='ic
 sc = coords.SkyCoordinate(['8h 5d', '2°5\'12.3" 0.3rad'], system='icrs') #yields length-2 array coordinates
 sc = coords.SkyCoordinate('SDSS J123456.89-012345.6', system='icrs') #knows how to interpret this input as an SDSS location
 
-#the string representation is mostly inherited from the low-level class.
+#the string representation can be inherited from the low-level class.
 assert str(sc) == '<SkyCoordinate (ICRS) RA=120.000 deg, Dec=5.00000 deg>'
-#in the future, additional features may be added to support
+#but it should also be possible to provide formats for outputting to strings,
+#similar to `Time`.  This can be added right away or at a later date.
 
 #transformation is done the same as for low-level classes, which it delegates to
 scfk5_j2001 = scoords.transform_to(coords.FK5(equinox=J2001))
