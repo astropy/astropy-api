@@ -1,13 +1,17 @@
 # -*- coding: utf-8 -*-
 
-from astropy import coordinates as c  # not recommended for users, but used below to make things simpler
+from astropy import coordinates as c  # not recommended for real code, but used in this document to make things easier to read
 from astropy import units as u
 
-#---- Classes for the representation of coordinates ----
+#<-----------------Classes for representation of coordinate data--------------->
+#These classes inherit from a common base class and internally contain Quantity
+#objects, which are arrays (although they may act as scalars, like numpy's
+#length-0  "arrays")
+
 c.SphericalRepresentation(c.Latitude(...), c.Longitude(...) # order doesn't matter, determine from class
 c.SphericalRepresentation(c.Latitude(...), c.Longitude(...), c.Distance(...))  #also can give distance
 c.SphericalRepresentation(lat=5*u.deg, lon=8*u.hour)
-c.SphericalRepresentation(lat=[5, 6]*u.deg, lon=[8, 9]*u.hour)  # arrays are of course fine
+c.SphericalRepresentation(lat=[5, 6]*u.deg, lon=[8, 9]*u.hour)  # arrays are fine
 c.SphericalRepresentation(lat=[5, 6]*u.deg, lon=[8, 9]*u.hour, copy=False)  # default is to make copies
 c.SphericalRepresentation(lat='5rad', lon='2h6m3.3s')  # these are parsed by `Latitude` and `Longitude` constructors, so no need to implement parsing
 
@@ -78,8 +82,17 @@ with raises(UnitsError):
 c.CartesianRepresentation(x=randn(100), y=randn(100), z=randn(100), units=u.kpc)
 #end OPTION
 
-#Future extensions: add additional useful representations like cylindrical or elliptical
+#representations convert into other representations via the `represent_as` method
+srep = c.SphericalRepresentation(lat=0*u.deg, lon=90*u.deg, distance=1*u.pc)
+crep = srep.represent_as(c.CartesianRepresentation)
+assert crep.x.value == 0 and crep.y.value == 1 and crep.z.value == 0
+#The functions that actually do the conversion are defined via methods on the
+#representation classes. This may later be expanded into a full registerable
+#transform graph like the coordinate frames, but initially it will be a simpler
+#method system
 
+
+#Future extensions: add additional useful representations like cylindrical or elliptical
 
 
 #<---------------------Reference Frame/"Low-level" classes--------------------->
@@ -110,8 +123,8 @@ fk5.data = ... #raises AttributeError
 
 #There is also a class-level attribute that lists the attributes needed to
 #identify the frame.  These include attributes like the `equinox` above.
-assert fk5.framespecattrs == ('equinox', 'obstime')
 assert FK5.framespecattrs == ('equinox', 'obstime')  # defined on the *class*
+assert fk5.framespecattrs == ('equinox', 'obstime')  # and hence also in the objects
 
 
 #The actual position information is accessed via the representation objects
@@ -217,11 +230,70 @@ def new_to_fk5(newobj, fk5frame):
 #<---------------------------"High-level" class-------------------------------->
 #The "high-level" class is intended to wrap the lower-level classes in such a
 #way that they can be round-tripped, as well as providing a variety of convenience
-#functionality.  This document is not intended to show *all* of the high-level
-#functionality, instead it shows how the high-level classes interact with the
+#functionality.  This document is not intended to show *all* of the possible
+#high-level functionality, rather how the high-level classes are initialized and interact with the
 #low-level classes
 
+#this creates an object that contains an `ICRS` low-level class, initialized
+#identically to the first ICRS example further up.
+sc = c.SkyCoordinate(c.SphericalRepresentation(lat=5*u.deg, lon=8*u.hour, distance=1*u.kpc), system='icrs')
+#Other representations and `system` keywords delegate to the appropriate
+#low-level class
+
+#they can also be initialized using the preferred representation names
+sc = c.SkyCoordinate(ra=8*u.hour, dec=5*u.deg, system='icrs')
+sc = c.SkyCoordinate(l=120*u.deg, b=5*u.deg, system='galactic')
+
+#they can also be initialized directly from low-level objects
+sc = c.SkyCoordinate(c.FK5(equinox=J2001)) # raises ValueError - the high-level class must always have position data
+sc = c.SkyCoordinate(c.ICRS(ra=8*u.hour, dec=5*u.deg))
+
+#similarly, the low-level object can always be accessed
+assert str(sc.frame) == '<ICRS RA=120.000 deg, Dec=5.00000 deg>'
+
+#Should (eventually) support a variety of possible complex string formats
+#OPTION: if this is implemented on the low-level class, this would also delegate
+sc = c.SkyCoordinate('8h00m00s +5d00m00.0s', system='icrs')
+sc = c.SkyCoordinate('8:00:00 +5:00:00.0', unit=(u.hour, u.deg), system='icrs')  # unit only needed b/c units are ambiguous - *never* accept ambiguity
+sc = c.SkyCoordinate(['8h 5d', '2°5\'12.3" 0.3rad'], system='icrs') #yields length-2 array coordinates
+sc = c.SkyCoordinate('SDSS J123456.89-012345.6', system='icrs') #knows how to interpret this input as an SDSS location
+
+#the string representation is mostly inherited from the low-level class.
+assert str(sc) == '<SkyCoordinate (ICRS) RA=120.000 deg, Dec=5.00000 deg>'
+#in the future, additional features may be added to support
+
+#transformation is done the same as for low-level classes, which it delegates to
+scfk5_j2001 = sc.transform_to(c.FK5(equinox=J2001))
+
+#the key difference is that the high-level class remembers frame information
+#necessary for round-tripping, unlike the low-level classes:
+sc1 = c.SkyCoordinate(ra=8*u.hour, dec=5*u.deg, equinox=J2001, system='fk5')
+sc2 = sc1.transform_to(c.ICRS)
+assert sc2.equinox == J2001  # this doesn't mean anything for ICRS, but is needed for the next transform
+sc3 = sc2.transform_to(c.FK5)
+assert sc3.equinox == J2001
+assert sc1.ra == sc3.ra
+# this did *not* work in the low-level class example shown above
+
+
+#`SkyCoordinate` will also include the attribute-style access that is in the
+#v0.2/0.3 coordinate objects.  This will *not* be in the low-level classes
+sc = c.SkyCoordinate(ra=8*u.hour, dec=5*u.deg, system='icrs')
+scgal = sc.galactic
+assert str(scgal) == '<SkyCoordinate (Galactic) l=216.31707 deg, b=17.51990 deg>'
+
+
 #the existing `from_name` and `match_to_catalog_*` methods will be moved to the
-#high-level class as "convinience" functionality.
+#high-level class as convinience functionality.
+
+m31icrs = SkyCoordinate.from_name('M31', system='icrs')
+assert str(m31icrs) == '<SkyCoordinate (ICRS) RA=10.68471 deg, Dec=41.26875 deg>'
+
+cat1 = SkyCoordinate(ra=[...]*u.hr, dec=[...]*u.deg, distance=[...]*u,kpc)
+cat2 = SkyCoordinate(ra=[...]*u.hr, dec=[...]*u.deg, distance=[...]*u,kpc
+idx2, sep2d, dist3d = cat1.match_to_catalog_sky(cat2)
+idx2, sep2d, dist3d = cat1.match_to_catalog_3d(cat2)
 
 
+#additional convinience functionality for the future should be added as methods
+#on `SkyCoordinate`, *not* the low-level classes.
