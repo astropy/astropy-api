@@ -8,21 +8,36 @@ from astropy import units as u
 #objects, which are arrays (although they may act as scalars, like numpy's
 #length-0  "arrays")
 
-coords.SphericalRepresentation(coords.Latitude(...), coords.Longitude(...) # order doesn't matter, determine from class
-coords.SphericalRepresentation(coords.Latitude(...), coords.Longitude(...), coords.Distance(...))  #also can give distance
+#If `Latitude` or `Logitude` objects are given, order doesn't matter
+coords.SphericalRepresentation(coords.Latitude(...), coords.Longitude(...)
+
+#similar if `Distance` object is given
+coords.SphericalRepresentation(coords.Latitude(...), coords.Longitude(...), coords.Distance(...))
 coords.SphericalRepresentation(lat=5*u.deg, lon=8*u.hour)
-coords.SphericalRepresentation(lat=[5, 6]*u.deg, lon=[8, 9]*u.hour)  # arrays are fine
-coords.SphericalRepresentation(lat=[5, 6]*u.deg, lon=[8, 9]*u.hour, copy=False)  # default is to make copies
-coords.SphericalRepresentation(lat='5rad', lon='2h6m3.3s')  # these are parsed by `Latitude` and `Longitude` constructors, so no need to implement parsing
 
-c1 = coords.SphericalRepresentation(lat=5*u.deg, lon=8*u.hour, distance=10*u.kpc)  # these could also be Angle and Distance objects instead of Quantities
-c1 = coords.SphericalRepresentation(c1)  #makes a copy
+#Arrays of any of the inputs are fine
+coords.SphericalRepresentation(lat=[5, 6]*u.deg, lon=[8, 9]*u.hour)
 
-coords.SphericalRepresentation(lat=[5, 6]*u.deg, lon=[8, 9]*u.hour, distance=[10, 11]*u.kpc)  # distance, lat, and lon must match
+#Default is to copy arrays, but optionally, it can be a reference
+coords.SphericalRepresentation(lat=[5, 6]*u.deg, lon=[8, 9]*u.hour, copy=False)
+
+#strings are parsed by `Latitude` and `Longitude` constructors, so no need to
+#implement parsing in the Representation classes
+coords.SphericalRepresentation(lat='5rad', lon='2h6m3.3s')
+
+#Or, you can give `Quantity`s with keywords, and they will be internally
+#converted to Angle/Distance
+c1 = coords.SphericalRepresentation(lat=5*u.deg, lon=8*u.hour, distance=10*u.kpc)
+
+# Can always just accept another representation, and that means just copy it
+c1 = coords.SphericalRepresentation(c1)
+
+ # distance, lat, and lon must match
+coords.SphericalRepresentation(lat=[5, 6]*u.deg, lon=[8, 9]*u.hour, distance=[10, 11]*u.kpc)
 with raises(ValueError):
-    coords.SphericalRepresentation(lat=[5, 6]*u.deg, lon=[8, 9]*u.hour, distance=[10, 11, 12]*u.kpc)  # distance, lat, and lon must match
+    coords.SphericalRepresentation(lat=[5, 6]*u.deg, lon=[8, 9]*u.hour, distance=[10, 11, 12]*u.kpc)
 with raises(ValueError):
-    coords.SphericalRepresentation(lat=[5, 6]*u.deg, lon=[8, 9, 10]*u.hour, distance=[10, 11]*u.kpc)  # distance, lat, and lon must match
+    coords.SphericalRepresentation(lat=[5, 6]*u.deg, lon=[8, 9, 10]*u.hour, distance=[10, 11]*u.kpc)
 c2 = coords.SphericalRepresentation(lat=[5, 6]*u.deg, lon=[8, 9]*u.hour, distance=10*u.kpc)  # if distance is a scalar, assume that's meant for all the angles
 assert len(c2.distance) == 2
 
@@ -30,8 +45,9 @@ assert len(c2.distance) == 2
 #if this option is *not* accepted, instead it will be in the "high-level"
 #class discussed at the bottom of this document
 c2 = coords.SphericalRepresentation('5:10:20.52 +23:23:23.5', units=(u.hourangle, u.degree))
-# In the current API, `unit` is confusing because sometimes it's one object and sometimes two (issue #1421).
-# But because this is the *only* time `units` is meaningful, it's ok here
+# In the current API, `unit` is confusing because sometimes it's one object
+# and sometimes two (issue #1421). But because this is the *only* time `units`
+# is meaningful, it's ok here
 assert c2.lon.units == u.hourangle
 
 with raises(ValueError):
@@ -63,13 +79,17 @@ c3 = coords.SphericalRepresentation(phi=120*u.deg, theta=85*u.deg)
 assert c1.lat == c3.lat
 assert c1.lin == c3.lon
 assert c1.phi == c3.phi
-#I think this is a bad idea, because phi and theta's definition depends on your field/undergraduate classroom.
+#I think this is a bad idea, because phi and theta's definition depends on your
+#subfield/undergraduate classroom.
 #end OPTION
 
-c1 = coords.CartesianRepresentation(randn(3, 100) * u.kpc) #first dimension must be 3
+#first dimension must be length-3 if a lone `Quantity` is passed in.
+c1 = coords.CartesianRepresentation(randn(3, 100) * u.kpc)
 assert c1.xyz.shape[0] == 0
 assert c1.unit == u.kpc
-assert c1.xyz.unit == 0  # not recommended, but available because `xyz` is a quantity
+#using `c1.xyz.unit` is the same as `c1.unit`, so it's not necessary to do this,
+#but it illustrates that `xyz` is a full-fledged `Quantity`.
+assert c1.xyz.unit == u.kpc
 assert c1.x.shape[0] == 100
 assert c1.y.shape[0] == 100
 assert c1.z.shape[0] == 100
@@ -105,9 +125,10 @@ assert crep.x.value == 0 and crep.y.value == 1 and crep.z.value == 0
 icrs = coords.ICRS(coords.SphericalRepresentation(lat=5*u.deg, lon=8*u.hour))
 
 
-#Frames that require additional information like equinoxs or obstimes get them as
-#keyword parameters to the frame constructor.  Where sensible, defaults are used
-fk5 = coords.FK5(coords.SphericalRepresentation(lat=5*u.deg, lon=8*u.hour))  # FK5 is almost always J2000 equinox
+#Frames that require additional information like equinoxs or obstimes get them
+#as keyword parameters to the frame constructor.  Where sensible, defaults are
+#used. E.g., FK5 is almost always J2000 equinox
+fk5 = coords.FK5(coords.SphericalRepresentation(lat=5*u.deg, lon=8*u.hour))
 J2000 = astropy.time.Time('J2000',scale='utc')
 fk5_2000 = coords.FK5(coords.SphericalRepresentation(lat=5*u.deg, lon=8*u.hour), equinox=J2000)
 assert fk5.equinox == fk5_2000.equionx
@@ -154,12 +175,16 @@ assert icrs_nokwarg.ra == icrs_2.ra and icrs_nokwarg.dec == icrs_2.dec
 #which will be a direct port of the existing methods:
 coo1 = coords.ICRS(ra=0*u.hour, dec=0*u.deg)
 coo2 = coords.ICRS(ra=0*u.hour, dec=1*u.deg)
-assert coo1.separation(coo2).degree == 1.0  # on-sky separation
+# `separation` is the on-sky separation
+assert coo1.separation(coo2).degree == 1.0
 
+#while `separation_3d` includes the 3D distance information
 coo3 = coords.ICRS(ra=0*u.hour, dec=0*u.deg, distance=1*u.kpc)
 coo4  = coords.ICRS(ra=0*u.hour, dec=0*u.deg, distance=2*u.kpc)
-assert coo3.separation_3d(coo4).kpc == 1.0  # 3d separation
-assert coo1.separation_3d(coo2).kpc == 1.0  # ValueError: coo1 and coo2 don't have distances
+assert coo3.separation_3d(coo4).kpc == 1.0
+
+#The next example raises an error because `coo1` and `coo2` don't have distances
+assert coo1.separation_3d(coo2).kpc == 1.0  # raises ValueError
 
 
 #the frames also know how to give a reasonable-looking string of themselves,
@@ -178,9 +203,9 @@ fk5_J2001_frame = coords.FK5(equinox=J2001)
 assert str(fk5_J2001_frame) == "<FK5 frame: equinox='J2000.000', obstime='B1950.000'>"
 
 #These frames are primarily useful for specifying what a coordinate should be
-# transformed *into*, as they are used by the `transform_to` method
-
-newfk5 = fk5.transform_to(fk5_J2001_frame)  # precesses the point to the new equinox
+#transformed *into*, as they are used by the `transform_to` method
+# E.g., this snippet precesses the point to the new equinox
+newfk5 = fk5.transform_to(fk5_J2001_frame)
 assert newfk5.equinox == J2001
 
 #classes can also be given to `transform_to`, which then uses the defaults for
@@ -202,7 +227,7 @@ fk5_trans_2 = fk5_2.transform_to(fk5_2001_frame)
 assert fk5_2.ra == fk5_trans_2.ra  # Now all is fine because same equinox
 
 #Trying to tansforming a frame with no data is of course an error:
-coords.FK5(equinox=J2001).transform_to(coords.ICRS)  # ValueError
+coords.FK5(equinox=J2001).transform_to(coords.ICRS)  # raises ValueError
 
 
 #To actually define a new transformation, the same scheme as in the
@@ -231,8 +256,8 @@ def new_to_fk5(newobj, fk5frame):
 #The "high-level" class is intended to wrap the lower-level classes in such a
 #way that they can be round-tripped, as well as providing a variety of convenience
 #functionality.  This document is not intended to show *all* of the possible
-#high-level functionality, rather how the high-level classes are initialized and interact with the
-#low-level classes
+#high-level functionality, rather how the high-level classes are initialized and
+#interact with the low-level classes
 
 #this creates an object that contains an `ICRS` low-level class, initialized
 #identically to the first ICRS example further up.
@@ -244,9 +269,11 @@ sc = coords.SkyCoordinate(coords.SphericalRepresentation(lat=5*u.deg, lon=8*u.ho
 sc = coords.SkyCoordinate(ra=8*u.hour, dec=5*u.deg, system='icrs')
 sc = coords.SkyCoordinate(l=120*u.deg, b=5*u.deg, system='galactic')
 
-#they can also be initialized directly from low-level objects
-sc = coords.SkyCoordinate(coords.FK5(equinox=J2001)) # raises ValueError - the high-level class must always have position data
+#High-level classes can also be initialized directly from low-level objects
 sc = coords.SkyCoordinate(coords.ICRS(ra=8*u.hour, dec=5*u.deg))
+#The next example raises an error because the high-level class must always
+#have position data
+sc = coords.SkyCoordinate(coords.FK5(equinox=J2001))  # raises ValueError
 
 #similarly, the low-level object can always be accessed
 assert str(scoords.frame) == '<ICRS RA=120.000 deg, Dec=5.00000 deg>'
@@ -254,9 +281,13 @@ assert str(scoords.frame) == '<ICRS RA=120.000 deg, Dec=5.00000 deg>'
 #Should (eventually) support a variety of possible complex string formats
 #OPTION: if this is implemented on the low-level class, this would also delegate
 sc = coords.SkyCoordinate('8h00m00s +5d00m00.0s', system='icrs')
-sc = coords.SkyCoordinate('8:00:00 +5:00:00.0', unit=(u.hour, u.deg), system='icrs')  # unit only needed b/c units are ambiguous - *never* accept ambiguity
-sc = coords.SkyCoordinate(['8h 5d', '2°5\'12.3" 0.3rad'], system='icrs') #yields length-2 array coordinates
-sc = coords.SkyCoordinate('SDSS J123456.89-012345.6', system='icrs') #knows how to interpret this input as an SDSS location
+#In the next example, the unit is only needed b/c units are ambiguous.  In
+#general, we *never* accept ambiguity
+sc = coords.SkyCoordinate('8:00:00 +5:00:00.0', unit=(u.hour, u.deg), system='icrs')
+#The next one would yield length-2 array coordinates, because of the comma
+sc = coords.SkyCoordinate(['8h 5d', '2°5\'12.3" 0.3rad'], system='icrs')
+#It should also interpret common designation styles as a coordinate
+sc = coords.SkyCoordinate('SDSS J123456.89-012345.6', system='icrs')
 
 #the string representation can be inherited from the low-level class.
 assert str(sc) == '<SkyCoordinate (ICRS) RA=120.000 deg, Dec=5.00000 deg>'
@@ -270,11 +301,15 @@ scfk5_j2001 = scoords.transform_to(coords.FK5(equinox=J2001))
 #necessary for round-tripping, unlike the low-level classes:
 sc1 = coords.SkyCoordinate(ra=8*u.hour, dec=5*u.deg, equinox=J2001, system='fk5')
 sc2 = sc1.transform_to(coords.ICRS)
-assert sc2.equinox == J2001  # this doesn't mean anything for ICRS, but is needed for the next transform
+#The next assertion succeeds, but it doesn't mean anything for ICRS, as ICRS
+#isn't defined in terms of an equinox
+assert sc2.equinox == J2001
+#But it *is* necessary once we transform to FK5
 sc3 = sc2.transform_to(coords.FK5)
 assert sc3.equinox == J2001
 assert sc1.ra == sc3.ra
-# this did *not* work in the low-level class example shown above
+#Note that this did *not* work in the low-level class example shown above,
+#because the ICRS low-level class does not store `equinox`.
 
 
 #`SkyCoordinate` will also include the attribute-style access that is in the
