@@ -38,8 +38,12 @@ with raises(ValueError):
     coords.SphericalRepresentation(lat=[5, 6]*u.deg, lon=[8, 9]*u.hour, distance=[10, 11, 12]*u.kpc)
 with raises(ValueError):
     coords.SphericalRepresentation(lat=[5, 6]*u.deg, lon=[8, 9, 10]*u.hour, distance=[10, 11]*u.kpc)
-c2 = coords.SphericalRepresentation(lat=[5, 6]*u.deg, lon=[8, 9]*u.hour, distance=10*u.kpc)  # if distance is a scalar, assume that's meant for all the angles
+#if the inputs are not the same, if possible they will be broadcast following
+#numpy's standard broadcasting rules.
+c2 = coords.SphericalRepresentation(lat=[5, 6]*u.deg, lon=[8, 9]*u.hour, distance=10*u.kpc)
 assert len(c2.distance) == 2
+#when they can't be broadcast, it is a ValueError (same as Numpy)
+c2 = coords.SphericalRepresentation(lat=[5, 6]*u.deg, lon=[8, 9, 10]*u.hour) #raises ValueError
 
 #OPTION: have the representation objects handle strings and lists of strings.
 #if this option is *not* accepted, instead it will be in the "high-level"
@@ -67,6 +71,9 @@ assert isinstance(c1.distance, coords.Distance)
 #but they are read-only, as representations are immutible once created
 with raises(AttributeError):
     c1.lat = coords.Latitude(...)
+#Note that it is still possible to modify the array in-place, but this is not
+#sanctioned by the API, as this would prevent things like caching.
+c1.lat[:] = [0] * u.deg  # possible, but NOT SUPPORTED
 
 #OPTION: also support "colatitude", internally stored only as `lat`
 c2 = coords.SphericalRepresentation(colat=85*u.deg, lon=8*u.hour)
@@ -82,6 +89,10 @@ assert c1.phi == c3.phi
 #I think this is a bad idea, because phi and theta's definition depends on your
 #subfield/undergraduate classroom.
 #end OPTION
+#OPTION (suggested by @taldcroft): instead of the above, include subclasses that
+#have the appropriate names
+c3 = coords.PhysicistSphericalRepresentation(phi=120*u.deg, theta=85*u.deg, rho=3*u.kpc)
+#end OPTION
 
 #first dimension must be length-3 if a lone `Quantity` is passed in.
 c1 = coords.CartesianRepresentation(randn(3, 100) * u.kpc)
@@ -93,10 +104,17 @@ assert c1.xyz.unit == u.kpc
 assert c1.x.shape[0] == 100
 assert c1.y.shape[0] == 100
 assert c1.z.shape[0] == 100
+# can also give each as separate keywords
 coords.CartesianRepresentation(x=randn(100)*u.kpc, y=randn(100)*u.kpc, z=randn(100)*u.kpc)
-with raises(UnitsError):
-    #units must match
-    coords.CartesianRepresentation(x=randn(100)*u.kpc, y=randn(100)*u.kpc, z=randn(100)*u.pc)
+#if the units don't match but are all distances, they will automatically be
+#converted to match `x`
+xarr, yarr, zarr = randn(3, 100)
+c1 = coords.CartesianRepresentation(x=xarr*u.kpc, y=yarr*u.kpc, z=zarr*u.kpc)
+c2 = coords.CartesianRepresentation(x=xarr*u.kpc, y=yarr*u.kpc, z=zarr*u.pc)
+assert c2.unit == u.kpc
+assert c1.z.kpc / 1000 == c2.z.kpc
+# although if they are not `Distance` compatible, it's an error
+c2 = coords.CartesianRepresentation(x=randn(100)*u.kpc, y=randn(100)*u.kpc, z=randn(100)*u.deg) # raises UnitsError
 
 #OPTION: allow raw array inputs and `units` keyword
 coords.CartesianRepresentation(x=randn(100), y=randn(100), z=randn(100), units=u.kpc)
@@ -215,16 +233,20 @@ samefk5 = fk5.transform_to(coords.FK5)
 assert samefk5.ra == fk5.ra and samefk5.dec == fk5.dec
 
 
-#transforming to a new frame necessarily loses framespec information if it
-#is not necessary for the new frame, so transforms are not necessarily
-#round-trippable unless the frame is explicitly given:
+#transforming to a new frame necessarily loses framespec information if that
+#information is not applicable to the new frame.  This means transforms are not
+#always round-trippable:
 fk5_2 =coords.FK5(ra=8*u.hour, dec=5*u.deg, equinox=J2001)
 ic_trans = fk5_2.transform_to(coords.ICRS)
-fk5_trans = fk5_2.transform_to(coords.FK5)
-assert fk5_2.ra == fk5_trans.ra  # AssertionError - fk5_trans is in the J2000
-# equinox instead of J2001, so it does not have the same RA/Dec
-fk5_trans_2 = fk5_2.transform_to(fk5_2001_frame)
-assert fk5_2.ra == fk5_trans_2.ra  # Now all is fine because same equinox
+
+#`ic_trans` does not have an `equinox`, so now when we transform back to FK5,
+#it's a *different* RA and Dec
+fk5_trans = ic_trans.transform_to(coords.FK5)
+assert fk5_2.ra == fk5_trans.ra  # raises AssertionError
+
+# But if you explicitly give the right equinox, all is fine
+fk5_trans_2 = fk5_2.transform_to(coords.FK5(equinox=J2001))
+assert fk5_2.ra == fk5_trans_2.ra
 
 #Trying to tansforming a frame with no data is of course an error:
 coords.FK5(equinox=J2001).transform_to(coords.ICRS)  # raises ValueError
@@ -263,7 +285,9 @@ def new_to_fk5(newobj, fk5frame):
 #identically to the first ICRS example further up.
 sc = coords.SkyCoordinate(coords.SphericalRepresentation(lat=5*u.deg, lon=8*u.hour, distance=1*u.kpc), system='icrs')
 #Other representations and `system` keywords delegate to the appropriate
-#low-level class
+#low-level class. The already-existing registry for user-defined coordinates
+#will be used by `SkyCoordinate` to figure out what various the `system`
+#keyword actually means.
 
 #they can also be initialized using the preferred representation names
 sc = coords.SkyCoordinate(ra=8*u.hour, dec=5*u.deg, system='icrs')
