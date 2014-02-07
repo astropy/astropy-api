@@ -8,7 +8,7 @@ from astropy import units as u
 #objects, which are arrays (although they may act as scalars, like numpy's
 #length-0  "arrays")
 
-#If `Latitude` or `Logitude` objects are given, order doesn't matter
+#If `Latitude` or `Longitude` objects are given, order doesn't matter
 coords.SphericalRepresentation(coords.Latitude(...), coords.Longitude(...)
 
 #similar if `Distance` object is given
@@ -32,27 +32,24 @@ c1 = coords.SphericalRepresentation(lat=5*u.deg, lon=8*u.hour, distance=10*u.kpc
 # Can always just accept another representation, and that means just copy it
 c1 = coords.SphericalRepresentation(c1)
 
- # distance, lat, and lon must match
+# distance, lat, and lon typically will just match in shape
 coords.SphericalRepresentation(lat=[5, 6]*u.deg, lon=[8, 9]*u.hour, distance=[10, 11]*u.kpc)
-with raises(ValueError):
-    coords.SphericalRepresentation(lat=[5, 6]*u.deg, lon=[8, 9]*u.hour, distance=[10, 11, 12]*u.kpc)
-with raises(ValueError):
-    coords.SphericalRepresentation(lat=[5, 6]*u.deg, lon=[8, 9, 10]*u.hour, distance=[10, 11]*u.kpc)
 #if the inputs are not the same, if possible they will be broadcast following
 #numpy's standard broadcasting rules.
 c2 = coords.SphericalRepresentation(lat=[5, 6]*u.deg, lon=[8, 9]*u.hour, distance=10*u.kpc)
 assert len(c2.distance) == 2
 #when they can't be broadcast, it is a ValueError (same as Numpy)
-c2 = coords.SphericalRepresentation(lat=[5, 6]*u.deg, lon=[8, 9, 10]*u.hour) #raises ValueError
+with raises(ValueError):
+    c2 = coords.SphericalRepresentation(lat=[5, 6]*u.deg, lon=[8, 9, 10]*u.hour)
 
 #OPTION: have the representation objects handle strings and lists of strings.
 #if this option is *not* accepted, instead it will be in the "high-level"
 #class discussed at the bottom of this document
 c2 = coords.SphericalRepresentation('5:10:20.52 +23:23:23.5', units=(u.hourangle, u.degree))
 # In the current API, `unit` is confusing because sometimes it's one object
-# and sometimes two (issue #1421). But because this is the *only* time `units`
+# and sometimes two (issue #1421). But because this is the *only* time `unit`
 # is meaningful, it's ok here
-assert c2.lon.units == u.hourangle
+assert c2.lon.unit == u.hourangle
 
 with raises(ValueError):
     coords.SphericalRepresentation('5:10:20.52 +23:23:23.5')  # this is ambiguous so it fails
@@ -92,6 +89,10 @@ assert c1.phi == c3.phi
 #OPTION (suggested by @taldcroft): instead of the above, include subclasses that
 #have the appropriate names
 c3 = coords.PhysicistSphericalRepresentation(phi=120*u.deg, theta=85*u.deg, rho=3*u.kpc)
+#it could also accept `r` instead of `rho`, but not both
+c3 = coords.PhysicistSphericalRepresentation(phi=120*u.deg, theta=85*u.deg, r=3*u.kpc)
+with raises(ValueError):
+    c3 = coords.PhysicistSphericalRepresentation(phi=120*u.deg, theta=85*u.deg, r=3*u.kpc, rho=4*u.kpc)
 #end OPTION
 
 #first dimension must be length-3 if a lone `Quantity` is passed in.
