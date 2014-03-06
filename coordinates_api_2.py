@@ -59,28 +59,14 @@ with raises(AttributeError):
 #sanctioned by the API, as this would prevent things like caching.
 c1.lat[:] = [0] * u.deg  # possible, but NOT SUPPORTED
 
-#OPTION: also support "colatitude", internally stored only as `lat`
-c2 = coords.SphericalRepresentation(colat=85*u.deg, lon=8*u.hour)
-assert c1.lat == c2.lat
-assert c2.colat.degree == 90. - c2.lat.degree
-#end OPTION
-
-#OPTION: also support "phi" and "theta"
-c3 = coords.SphericalRepresentation(phi=120*u.deg, theta=85*u.deg)
-assert c1.lat == c3.lat
-assert c1.lin == c3.lon
-assert c1.phi == c3.phi
-#I think this is a bad idea, because phi and theta's definition depends on your
-#subfield/undergraduate classroom.
-#end OPTION
-#OPTION (suggested by @taldcroft): instead of the above, include subclasses that
-#have the appropriate names
+#To address the fact that there are various other conventions for how spherical
+#coordinates are defined, other conventions can be included as new classes.
+#Later there may be other conventions that we implement - for now just the
+#physics convention, as it is one of the most common cases.
 c3 = coords.PhysicistSphericalRepresentation(phi=120*u.deg, theta=85*u.deg, rho=3*u.kpc)
-#it could also accept `r` instead of `rho`, but not both
 c3 = coords.PhysicistSphericalRepresentation(phi=120*u.deg, theta=85*u.deg, r=3*u.kpc)
 with raises(ValueError):
     c3 = coords.PhysicistSphericalRepresentation(phi=120*u.deg, theta=85*u.deg, r=3*u.kpc, rho=4*u.kpc)
-#end OPTION
 
 #first dimension must be length-3 if a lone `Quantity` is passed in.
 c1 = coords.CartesianRepresentation(randn(3, 100) * u.kpc)
