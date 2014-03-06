@@ -42,24 +42,6 @@ assert len(c2.distance) == 2
 with raises(ValueError):
     c2 = coords.SphericalRepresentation(lat=[5, 6]*u.deg, lon=[8, 9, 10]*u.hour)
 
-#OPTION: have the representation objects handle strings and lists of strings.
-#if this option is *not* accepted, instead it will be in the "high-level"
-#class discussed at the bottom of this document
-c2 = coords.SphericalRepresentation('5:10:20.52 +23:23:23.5', units=(u.hourangle, u.degree))
-# In the current API, `unit` is confusing because sometimes it's one object
-# and sometimes two (issue #1421). But because this is the *only* time `unit`
-# is meaningful, it's ok here
-assert c2.lon.unit == u.hourangle
-
-with raises(ValueError):
-    coords.SphericalRepresentation('5:10:20.52 +23:23:23.5')  # this is ambiguous so it fails
-
-#a `store_as` option is important for some cases - see astropy/astropy#1421 for justification
-c2 = coords.SphericalRepresentation('5:10:20.52 +23:23:23.5', units=(u.hourangle, u.degree), store_as=(u.radian, u.radian))
-assert c2.lon.units == u.radian
-
-#end OPTION
-
 
 #regardless of how input, the `lat` and `lon` come out as angle/distance
 assert isinstance(c1.lat, coords.Angle)
@@ -304,7 +286,6 @@ sc = coords.SkyCoordinate(coords.FK5(equinox=J2001))  # raises ValueError
 assert str(scoords.frame) == '<ICRS RA=120.000 deg, Dec=5.00000 deg>'
 
 #Should (eventually) support a variety of possible complex string formats
-#OPTION: if this is implemented on the low-level class, this would also delegate
 sc = coords.SkyCoordinate('8h00m00s +5d00m00.0s', system='icrs')
 #In the next example, the unit is only needed b/c units are ambiguous.  In
 #general, we *never* accept ambiguity
