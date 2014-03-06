@@ -42,6 +42,11 @@ assert len(c2.distance) == 2
 with raises(ValueError):
     c2 = coords.SphericalRepresentation(lat=[5, 6]*u.deg, lon=[8, 9, 10]*u.hour)
 
+# a `store_as` option is important for some cases - this is basically a
+# convinience to make it easier to combine inhomogenous angle array or string
+# lists. See astropy/astropy#1421 for justification
+c2 = coords.SphericalRepresentation(lat=[5, 6]*u.deg, lon=[8, 9]*u.hour, store_as=(u.radian, u.radian))
+assert c2.lon.units == u.radian
 
 #regardless of how input, the `lat` and `lon` come out as angle/distance
 assert isinstance(c1.lat, coords.Angle)
