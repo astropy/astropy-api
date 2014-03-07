@@ -137,8 +137,8 @@ with raises(AttributeError):
 
 #There is also a class-level attribute that lists the attributes needed to
 #identify the frame.  These include attributes like the `equinox` above.
-assert FK5.framespecattrs == ('equinox', 'obstime')  # defined on the *class*
-assert fk5.framespecattrs == ('equinox', 'obstime')  # and hence also in the objects
+assert FK5.frame_attr_names == ('equinox', 'obstime')  # defined on the *class*
+assert fk5.frame_attr_names == ('equinox', 'obstime')  # and hence also in the objects
 
 
 #The actual position information is accessed via the representation objects
