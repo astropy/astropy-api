@@ -90,9 +90,11 @@ assert c1.z.kpc / 1000 == c2.z.kpc
 # although if they are not `Distance` compatible, it's an error
 c2 = coords.CartesianRepresentation(x=randn(100)*u.kpc, y=randn(100)*u.kpc, z=randn(100)*u.deg) # raises UnitsError
 
-#OPTION: allow raw array inputs and `units` keyword
-coords.CartesianRepresentation(x=randn(100), y=randn(100), z=randn(100), units=u.kpc)
-#end OPTION
+# CartesianRepresentation can also accept raw arrays and a `unit` keyword
+# instead of having units attached to each of `x`, `y`, and `z`. Note that this
+# is *not* the case for other representations - it's only sensible for
+# Cartesian, because all of the data axes all have the same unit.
+coords.CartesianRepresentation(x=randn(100), y=randn(100), z=randn(100), unit=u.kpc)
 
 #representations convert into other representations via the `represent_as` method
 srep = coords.SphericalRepresentation(lat=0*u.deg, lon=90*u.deg, distance=1*u.pc)
