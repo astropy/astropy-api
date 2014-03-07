@@ -116,6 +116,9 @@ assert crep.x.value == 0 and crep.y.value == 1 and crep.z.value == 0
 #They can always accept a representation as a first argument
 icrs = coords.ICRS(coords.SphericalRepresentation(lat=5*u.deg, lon=8*u.hour))
 
+#which is stored as the `data` attribute
+assert icrs.data.lat == 5*u.deg
+assert icrs.data.lon == 8*u.hour
 
 #Frames that require additional information like equinoxs or obstimes get them
 #as keyword parameters to the frame constructor.  Where sensible, defaults are
@@ -131,15 +134,11 @@ fk5.equinox = J2001  # raises AttributeError
 #As is the representation data.
 with raises(AttributeError):
     fk5.data = ...
-# Note that there *may* be call to make `data` mutible for performance reasons.
-# We will start assuming immutibility, but possibly relax this in the future if
-# the need becomes clear.
 
 #There is also a class-level attribute that lists the attributes needed to
 #identify the frame.  These include attributes like the `equinox` above.
 assert FK5.frame_attr_names == ('equinox', 'obstime')  # defined on the *class*
 assert fk5.frame_attr_names == ('equinox', 'obstime')  # and hence also in the objects
-
 
 #The actual position information is accessed via the representation objects
 assert icrs.represent_as(coords.SphericalRepresentation).lat == 5*u.deg
@@ -186,7 +185,9 @@ assert str(icrs_2) == '<ICRS RA=120.000 deg, Dec=5.00000 deg, Distance=1 kpc>'
 
 
 #<-------------------------Transformations------------------------------------->
-#Transformation transform low-level classes from one frame to another.
+#Transformation functionality is the key to the whole scheme: they transform
+#low-level classes from one frame to another.
+
 #If no data (or `None`) is given, the class acts as a specifier of a frame, but
 #without any stored data.
 J2001 = astropy.time.Time('J2001',scale='utc')
@@ -194,6 +195,13 @@ fk5_J2001_frame = coords.FK5(equinox=J2001)
 
 #if they do not have data, the string instead is the frame specification
 assert str(fk5_J2001_frame) == "<FK5 frame: equinox='J2000.000', obstime='B1950.000'>"
+
+# Note that, although a frame object is immutible and can't have data dded, it
+# can be used to create a new object that does have data by giving the
+#`realize_frame` method a representation:
+srep = coords.SphericalRepresentation(lat=5*u.deg, lon=8*u.hour)
+fk5_j2001_with_data = fk5_J2001_frame.realize_frame(srep)
+assert fk5_j2001_with_data.data is not None
 
 #These frames are primarily useful for specifying what a coordinate should be
 #transformed *into*, as they are used by the `transform_to` method
