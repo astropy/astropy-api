@@ -128,11 +128,12 @@ assert fk5.equinox == fk5_2000.equionx
 #the information required to specify the frame is immutible
 fk5.equinox = J2001  # raises AttributeError
 
-#OPTION: the *representation data* might not be immutible:
-fk5.data = coords.SphericalRepresentation(lat=6*u.deg, lon=9*u.hour)
-#OR, it might be immutible:
-fk5.data = ... #raises AttributeError
-#end OPTION
+#As is the representation data.
+with raises(AttributeError):
+    fk5.data = ...
+# Note that there *may* be call to make `data` mutible for performance reasons.
+# We will start assuming immutibility, but possibly relax this in the future if
+# the need becomes clear.
 
 #There is also a class-level attribute that lists the attributes needed to
 #identify the frame.  These include attributes like the `equinox` above.
