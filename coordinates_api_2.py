@@ -138,9 +138,12 @@ with raises(AttributeError):
     fk5.data = ...
 
 # There is also a class-level attribute that lists the attributes needed to
-# identify the frame.  These include attributes like the `equinox` above.
+# identify the frame.  These include attributes like `equinox` shown above.
 assert FK5.frame_attr_names == ('equinox', 'obstime')  # defined on the *class*
 assert fk5.frame_attr_names == ('equinox', 'obstime')  # and hence also in the objects
+# `frame_attr_names` will mainly be used by the high-level class (discussed
+# below) to allow round-tripping between various frames.  It is also part of the
+# public API for other similar developer / advanced users' use.
 
 # The actual position information is accessed via the representation objects
 assert icrs.represent_as(coords.SphericalRepresentation).lat == 5*u.deg
