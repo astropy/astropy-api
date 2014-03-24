@@ -217,6 +217,8 @@ assert str(fk5_J2001_frame) == "<FK5 frame: equinox='J2000.000', obstime='B1950.
 srep = coords.SphericalRepresentation(lat=5*u.deg, lon=8*u.hour)
 fk5_j2001_with_data = fk5_J2001_frame.realize_frame(srep)
 assert fk5_j2001_with_data.data is not None
+# Now `fk5_j2001_with_data` is in the same frame as `fk5_J2001_frame`, but it
+# is an actual low-level coordinate, rather than a frame without data.
 
 # These frames are primarily useful for specifying what a coordinate should be
 # transformed *into*, as they are used by the `transform_to` method
