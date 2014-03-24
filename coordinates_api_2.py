@@ -8,12 +8,19 @@ from astropy import units as u
 # objects, which are arrays (although they may act as scalars, like numpy's
 # length-0  "arrays")
 
-# If `Latitude` or `Longitude` objects are given, order doesn't matter
-coords.SphericalRepresentation(coords.Latitude(...), coords.Longitude(...)
-
-# similar if `Distance` object is given
-coords.SphericalRepresentation(coords.Latitude(...), coords.Longitude(...), coords.Distance(...))
+# They can be initialized with a variety of ways that make sense. Distance is
+# optional.
 coords.SphericalRepresentation(lat=5*u.deg, lon=8*u.hour)
+coords.SphericalRepresentation(lat=5*u.deg, lon=8*u.hour, distance=10*u.kpc)
+
+coords.SphericalRepresentation(coords.Latitude(5, u.deg), coords.Longitude(8, u.hour))
+coords.SphericalRepresentation(coords.Latitude(5, u.deg), coords.Longitude(8, u.hour), coords.Distance(10, u.kpc))
+
+# In the initial implementation, the lat/lon/distance arguments to the
+# initializer must be in order. A *possible* future change will be to allow
+# smarter guessing of the order.  E.g. `Latitude` and `Longitude` objects can be
+# given in any order.
+
 
 # Arrays of any of the inputs are fine
 coords.SphericalRepresentation(lat=[5, 6]*u.deg, lon=[8, 9]*u.hour)
@@ -29,8 +36,11 @@ coords.SphericalRepresentation(lat='5rad', lon='2h6m3.3s')
 # converted to Angle/Distance
 c1 = coords.SphericalRepresentation(lat=5*u.deg, lon=8*u.hour, distance=10*u.kpc)
 
-#  Can always just accept another representation, and that means just copy it
-c1 = coords.SphericalRepresentation(c1)
+# Can also give another representation object with the `reprobj` keyword.
+c2 = coords.SphericalRepresentation(reprobj=c1)
+# lat/lon/distance must be None in the case below because it's ambiguous if they
+# should come from the `c1` object or the explicitly-passed keywords.
+c2 = coords.SphericalRepresentation(lat=5*u.deg, lon=8*u.hour, reprobj=c1) #raises ValueError
 
 #  distance, lat, and lon typically will just match in shape
 coords.SphericalRepresentation(lat=[5, 6]*u.deg, lon=[8, 9]*u.hour, distance=[10, 11]*u.kpc)
