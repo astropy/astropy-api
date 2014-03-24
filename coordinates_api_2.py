@@ -43,7 +43,7 @@ with raises(ValueError):
     c2 = coords.SphericalRepresentation(lat=[5, 6]*u.deg, lon=[8, 9, 10]*u.hour)
 
 # a `store_as` option is important for some cases - this is basically a
-# convinience to make it easier to combine inhomogenous angle array or string
+# convenience to make it easier to combine inhomogeneous angle array or string
 # lists. See astropy/astropy#1421 for justification
 c2 = coords.SphericalRepresentation(lat=[5, 6]*u.deg, lon=[8, 9]*u.hour, store_as=(u.radian, u.radian))
 assert c2.lon.units == u.radian
@@ -52,7 +52,7 @@ assert c2.lon.units == u.radian
 assert isinstance(c1.lat, coords.Angle)
 assert isinstance(c1.distance, coords.Distance)
 
-#but they are read-only, as representations are immutible once created
+#but they are read-only, as representations are immutable once created
 with raises(AttributeError):
     c1.lat = coords.Latitude(...)
 #Note that it is still possible to modify the array in-place, but this is not
@@ -130,7 +130,7 @@ J2000 = astropy.time.Time('J2000',scale='utc')
 fk5_2000 = coords.FK5(coords.SphericalRepresentation(lat=5*u.deg, lon=8*u.hour), equinox=J2000)
 assert fk5.equinox == fk5_2000.equionx
 
-#the information required to specify the frame is immutible
+#the information required to specify the frame is immutable
 fk5.equinox = J2001  # raises AttributeError
 
 #As is the representation data.
@@ -150,7 +150,7 @@ assert icrs.cartesian.z.value > 0
 #Many frames have a "preferred" representation, the one in which they are
 #conventionally described, often with a special name for some of the
 #coordinates. E.g., most equatorial coordinate systems are spherical with RA and
-#Decoords. This works simply as a shorthand for the longer form above
+#Dec. This works simply as a shorthand for the longer form above
 
 assert icrs.ra == 5*u.deg
 assert fk5.dec == 8*u.hour
@@ -198,7 +198,7 @@ fk5_J2001_frame = coords.FK5(equinox=J2001)
 #if they do not have data, the string instead is the frame specification
 assert str(fk5_J2001_frame) == "<FK5 frame: equinox='J2000.000', obstime='B1950.000'>"
 
-# Note that, although a frame object is immutible and can't have data dded, it
+# Note that, although a frame object is immutable and can't have data added, it
 # can be used to create a new object that does have data by giving the
 #`realize_frame` method a representation:
 srep = coords.SphericalRepresentation(lat=5*u.deg, lon=8*u.hour)
@@ -240,7 +240,7 @@ coords.FK5(equinox=J2001).transform_to(coords.ICRS)  # raises ValueError
 #To actually define a new transformation, the same scheme as in the
 #0.2/0.3 coordinates framework can be re-used - a graph of transform functions
 #connecting various coordinate classes together.  The main changes are:
-# 1) The transform functions now get the frame object they are trasnforming the
+# 1) The transform functions now get the frame object they are transforming the
 #    current data into.
 # 2) Frames with additional information need to have a way to transform between
 #    objects of the same class, but with different framespecinfo values
@@ -250,7 +250,7 @@ coords.FK5(equinox=J2001).transform_to(coords.ICRS)  # raises ValueError
 def new_to_fk5(newobj, fk5frame):
     ot = newobj.obstime
     eq = fk5frame.equinox
-    # ... build a *cartesian* transform matrix using `eq` that trasnforms from
+    # ... build a *cartesian* transform matrix using `eq` that transforms from
     # the `newobj` frame as observed at `ot` to FK5 an equinox `eq`
     return matrix
 
@@ -328,7 +328,7 @@ assert str(scgal) == '<SkyCoordinate (Galactic) l=216.31707 deg, b=17.51990 deg>
 
 
 #the existing `from_name` and `match_to_catalog_*` methods will be moved to the
-#high-level class as convinience functionality.
+#high-level class as convenience functionality.
 
 m31icrs = SkyCoordinate.from_name('M31', system='icrs')
 assert str(m31icrs) == '<SkyCoordinate (ICRS) RA=10.68471 deg, Dec=41.26875 deg>'
@@ -339,5 +339,5 @@ idx2, sep2d, dist3d = cat1.match_to_catalog_sky(cat2)
 idx2, sep2d, dist3d = cat1.match_to_catalog_3d(cat2)
 
 
-#additional convinience functionality for the future should be added as methods
+#additional convenience functionality for the future should be added as methods
 #on `SkyCoordinate`, *not* the low-level classes.
