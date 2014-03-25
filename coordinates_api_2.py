@@ -10,6 +10,7 @@ from astropy import units as u
 
 # They can be initialized with a variety of ways that make sense. Distance is
 # optional.
+coords.SphericalRepresentation(lat=5*u.deg, lon=8*u.hourangle)
 coords.SphericalRepresentation(lat=5*u.deg, lon=8*u.hour)
 coords.SphericalRepresentation(lat=5*u.deg, lon=8*u.hour, distance=10*u.kpc)
 
@@ -23,10 +24,10 @@ coords.SphericalRepresentation(coords.Latitude(5, u.deg), coords.Longitude(8, u.
 
 
 # Arrays of any of the inputs are fine
-coords.SphericalRepresentation(lat=[5, 6]*u.deg, lon=[8, 9]*u.hour)
+coords.SphericalRepresentation(lat=[5, 6]*u.deg, lon=[8, 9]*u.hourangle)
 
 # Default is to copy arrays, but optionally, it can be a reference
-coords.SphericalRepresentation(lat=[5, 6]*u.deg, lon=[8, 9]*u.hour, copy=False)
+coords.SphericalRepresentation(lat=[5, 6]*u.deg, lon=[8, 9]*u.hourangle, copy=False)
 
 # strings are parsed by `Latitude` and `Longitude` constructors, so no need to
 # implement parsing in the Representation classes
@@ -34,29 +35,38 @@ coords.SphericalRepresentation(lat='5rad', lon='2h6m3.3s')
 
 # Or, you can give `Quantity`s with keywords, and they will be internally
 # converted to Angle/Distance
-c1 = coords.SphericalRepresentation(lat=5*u.deg, lon=8*u.hour, distance=10*u.kpc)
+c1 = coords.SphericalRepresentation(lat=5*u.deg, lon=8*u.hourangle, distance=10*u.kpc)
 
 # Can also give another representation object with the `reprobj` keyword.
 c2 = coords.SphericalRepresentation(reprobj=c1)
 # lat/lon/distance must be None in the case below because it's ambiguous if they
 # should come from the `c1` object or the explicitly-passed keywords.
-c2 = coords.SphericalRepresentation(lat=5*u.deg, lon=8*u.hour, reprobj=c1) #raises ValueError
+c2 = coords.SphericalRepresentation(lat=5*u.deg, lon=8*u.hourangle, reprobj=c1) #raises ValueError
 
 #  distance, lat, and lon typically will just match in shape
-coords.SphericalRepresentation(lat=[5, 6]*u.deg, lon=[8, 9]*u.hour, distance=[10, 11]*u.kpc)
+coords.SphericalRepresentation(lat=[5, 6]*u.deg, lon=[8, 9]*u.hourangle, distance=[10, 11]*u.kpc)
 # if the inputs are not the same, if possible they will be broadcast following
 # numpy's standard broadcasting rules.
-c2 = coords.SphericalRepresentation(lat=[5, 6]*u.deg, lon=[8, 9]*u.hour, distance=10*u.kpc)
+c2 = coords.SphericalRepresentation(lat=[5, 6]*u.deg, lon=[8, 9]*u.hourangle, distance=10*u.kpc)
 assert len(c2.distance) == 2
 #when they can't be broadcast, it is a ValueError (same as Numpy)
 with raises(ValueError):
-    c2 = coords.SphericalRepresentation(lat=[5, 6]*u.deg, lon=[8, 9, 10]*u.hour)
+    c2 = coords.SphericalRepresentation(lat=[5, 6]*u.deg, lon=[8, 9, 10]*u.hourangle)
 
-# a `store_as` option is important for some cases - this is basically a
-# convenience to make it easier to combine inhomogeneous angle array or string
-# lists. See astropy/astropy#1421 for justification
-c2 = coords.SphericalRepresentation(lat=[5, 6]*u.deg, lon=[8, 9]*u.hour, store_as=(u.radian, u.radian))
-assert c2.lon.units == u.radian
+# It's also possible to pass in scalar quantity lists with mixed units. These
+# are converted to array quantities following the same rule as `Quantity`: all
+# elements are converted to match the first element's units.
+c2 = coords.SphericalRepresentation(lat=[5*u.deg, (6*pi/180)*u.rad],
+                                    lon=[8*u.hourangle, 135*u.deg])
+assert c2.lat.unit == u.deg and c2.lon.unit == u.hourangle
+assert c2.lon[1].value == 9
+
+# The Quantity initializer itself can also be used to force the unit even if the
+# first element doesn't have the right unit
+lat = u.Quantity([(5*pi/180)*u.rad, 0.4*u.hourangle], u.deg)
+lon = u.Quantity([120*u.deg, 135*u.deg], u.hourangle)
+c2 = coords.SphericalRepresentation(lat, lon)
+
 
 # regardless of how input, the `lat` and `lon` come out as angle/distance
 assert isinstance(c1.lat, coords.Angle)
