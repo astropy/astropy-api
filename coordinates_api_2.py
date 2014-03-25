@@ -8,68 +8,67 @@ from astropy import units as u
 # objects, which are arrays (although they may act as scalars, like numpy's
 # length-0  "arrays")
 
-# They can be initialized with a variety of ways that make sense. Distance is
-# optional.
-coords.SphericalRepresentation(lat=5*u.deg, lon=8*u.hourangle)
-coords.SphericalRepresentation(lat=5*u.deg, lon=8*u.hour)
-coords.SphericalRepresentation(lat=5*u.deg, lon=8*u.hour, distance=10*u.kpc)
-
-coords.SphericalRepresentation(coords.Latitude(5, u.deg), coords.Longitude(8, u.hour))
-coords.SphericalRepresentation(coords.Latitude(5, u.deg), coords.Longitude(8, u.hour), coords.Distance(10, u.kpc))
+# They can be initialized with a variety of ways that make intuitive sense.
+# Distance is optional.
+coords.SphericalRepresentation(lon=8*u.hour, lat=5*u.deg)
+coords.SphericalRepresentation(lon=8*u.hourangle, lat=5*u.deg)
+coords.SphericalRepresentation(lon=8*u.hourangle, lat=5*u.deg, distance=10*u.kpc)
 
 # In the initial implementation, the lat/lon/distance arguments to the
 # initializer must be in order. A *possible* future change will be to allow
 # smarter guessing of the order.  E.g. `Latitude` and `Longitude` objects can be
 # given in any order.
-
+coords.SphericalRepresentation(coords.Longitude(8, u.hour), coords.Latitude(5, u.deg))
+coords.SphericalRepresentation(coords.Longitude(8, u.hour), coords.Latitude(5, u.deg), coords.Distance(10, u.kpc))
 
 # Arrays of any of the inputs are fine
-coords.SphericalRepresentation(lat=[5, 6]*u.deg, lon=[8, 9]*u.hourangle)
+coords.SphericalRepresentation(lon=[8, 9]*u.hourangle, lat=[5, 6]*u.deg)
 
 # Default is to copy arrays, but optionally, it can be a reference
-coords.SphericalRepresentation(lat=[5, 6]*u.deg, lon=[8, 9]*u.hourangle, copy=False)
+coords.SphericalRepresentation(lon=[8, 9]*u.hourangle, lat=[5, 6]*u.deg, copy=False)
 
 # strings are parsed by `Latitude` and `Longitude` constructors, so no need to
 # implement parsing in the Representation classes
-coords.SphericalRepresentation(lat='5rad', lon='2h6m3.3s')
+coords.SphericalRepresentation(lon='2h6m3.3s', lat='5rad')
 
 # Or, you can give `Quantity`s with keywords, and they will be internally
 # converted to Angle/Distance
-c1 = coords.SphericalRepresentation(lat=5*u.deg, lon=8*u.hourangle, distance=10*u.kpc)
+c1 = coords.SphericalRepresentation(lon=8*u.hourangle, lat=5*u.deg, distance=10*u.kpc)
 
 # Can also give another representation object with the `reprobj` keyword.
 c2 = coords.SphericalRepresentation(reprobj=c1)
 # lat/lon/distance must be None in the case below because it's ambiguous if they
 # should come from the `c1` object or the explicitly-passed keywords.
-c2 = coords.SphericalRepresentation(lat=5*u.deg, lon=8*u.hourangle, reprobj=c1) #raises ValueError
+c2 = coords.SphericalRepresentation(lon=8*u.hourangle, lat=5*u.deg, reprobj=c1) #raises ValueError
 
 #  distance, lat, and lon typically will just match in shape
-coords.SphericalRepresentation(lat=[5, 6]*u.deg, lon=[8, 9]*u.hourangle, distance=[10, 11]*u.kpc)
+coords.SphericalRepresentation(lon=[8, 9]*u.hourangle, lat=[5, 6]*u.deg, distance=[10, 11]*u.kpc)
 # if the inputs are not the same, if possible they will be broadcast following
 # numpy's standard broadcasting rules.
-c2 = coords.SphericalRepresentation(lat=[5, 6]*u.deg, lon=[8, 9]*u.hourangle, distance=10*u.kpc)
+c2 = coords.SphericalRepresentation(lon=[8, 9]*u.hourangle, lat=[5, 6]*u.deg, distance=10*u.kpc)
 assert len(c2.distance) == 2
 #when they can't be broadcast, it is a ValueError (same as Numpy)
 with raises(ValueError):
-    c2 = coords.SphericalRepresentation(lat=[5, 6]*u.deg, lon=[8, 9, 10]*u.hourangle)
+    c2 = coords.SphericalRepresentation(lon=[8, 9, 10]*u.hourangle, lat=[5, 6]*u.deg)
 
 # It's also possible to pass in scalar quantity lists with mixed units. These
 # are converted to array quantities following the same rule as `Quantity`: all
 # elements are converted to match the first element's units.
-c2 = coords.SphericalRepresentation(lat=[5*u.deg, (6*pi/180)*u.rad],
-                                    lon=[8*u.hourangle, 135*u.deg])
+c2 = coords.SphericalRepresentation(lon=[8*u.hourangle, 135*u.deg],
+                                    lat=[5*u.deg, (6*pi/180)*u.rad])
 assert c2.lat.unit == u.deg and c2.lon.unit == u.hourangle
 assert c2.lon[1].value == 9
 
 # The Quantity initializer itself can also be used to force the unit even if the
 # first element doesn't have the right unit
-lat = u.Quantity([(5*pi/180)*u.rad, 0.4*u.hourangle], u.deg)
 lon = u.Quantity([120*u.deg, 135*u.deg], u.hourangle)
-c2 = coords.SphericalRepresentation(lat, lon)
+lat = u.Quantity([(5*pi/180)*u.rad, 0.4*u.hourangle], u.deg)
+c2 = coords.SphericalRepresentation(lon, lat)
 
 
 # regardless of how input, the `lat` and `lon` come out as angle/distance
 assert isinstance(c1.lat, coords.Angle)
+assert isinstance(c1.lat, coords.Latitude)  # `Latitude` is an `Angle` subclass
 assert isinstance(c1.distance, coords.Distance)
 
 # but they are read-only, as representations are immutable once created
@@ -117,7 +116,7 @@ c2 = coords.CartesianRepresentation(x=randn(100)*u.kpc, y=randn(100)*u.kpc, z=ra
 coords.CartesianRepresentation(x=randn(100), y=randn(100), z=randn(100), unit=u.kpc)
 
 # representations convert into other representations via  `represent_as`
-srep = coords.SphericalRepresentation(lat=0*u.deg, lon=90*u.deg, distance=1*u.pc)
+srep = coords.SphericalRepresentation(lon=90*u.deg, lat=0*u.deg, distance=1*u.pc)
 crep = srep.represent_as(coords.CartesianRepresentation)
 assert crep.x.value == 0 and crep.y.value == 1 and crep.z.value == 0
 # The functions that actually do the conversion are defined via methods on the
@@ -136,7 +135,7 @@ assert crep.x.value == 0 and crep.y.value == 1 and crep.z.value == 0
 
 
 # They can always accept a representation as a first argument
-icrs = coords.ICRS(coords.SphericalRepresentation(lat=5*u.deg, lon=8*u.hour))
+icrs = coords.ICRS(coords.SphericalRepresentation(lon=8*u.hour, lat=5*u.deg))
 
 # which is stored as the `data` attribute
 assert icrs.data.lat == 5*u.deg
@@ -145,9 +144,9 @@ assert icrs.data.lon == 8*u.hour
 # Frames that require additional information like equinoxs or obstimes get them
 # as keyword parameters to the frame constructor.  Where sensible, defaults are
 # used. E.g., FK5 is almost always J2000 equinox
-fk5 = coords.FK5(coords.SphericalRepresentation(lat=5*u.deg, lon=8*u.hour))
+fk5 = coords.FK5(coords.SphericalRepresentation(lon=8*u.hour, lat=5*u.deg))
 J2000 = astropy.time.Time('J2000',scale='utc')
-fk5_2000 = coords.FK5(coords.SphericalRepresentation(lat=5*u.deg, lon=8*u.hour), equinox=J2000)
+fk5_2000 = coords.FK5(coords.SphericalRepresentation(lon=8*u.hour, lat=5*u.deg), equinox=J2000)
 assert fk5.equinox == fk5_2000.equionx
 
 # the information required to specify the frame is immutable
@@ -224,7 +223,7 @@ assert str(fk5_J2001_frame) == "<FK5 frame: equinox='J2000.000', obstime='B1950.
 #  Note that, although a frame object is immutable and can't have data added, it
 #  can be used to create a new object that does have data by giving the
 # `realize_frame` method a representation:
-srep = coords.SphericalRepresentation(lat=5*u.deg, lon=8*u.hour)
+srep = coords.SphericalRepresentation(lon=8*u.hour, lat=5*u.deg)
 fk5_j2001_with_data = fk5_J2001_frame.realize_frame(srep)
 assert fk5_j2001_with_data.data is not None
 # Now `fk5_j2001_with_data` is in the same frame as `fk5_J2001_frame`, but it
@@ -293,7 +292,7 @@ def new_to_fk5(newobj, fk5frame):
 
 # this creates an object that contains an `ICRS` low-level class, initialized
 # identically to the first ICRS example further up.
-sc = coords.SkyCoordinate(coords.SphericalRepresentation(lat=5*u.deg, lon=8*u.hour, distance=1*u.kpc), system='icrs')
+sc = coords.SkyCoordinate(coords.SphericalRepresentation(lon=8*u.hour, lat=5*u.deg, distance=1*u.kpc), system='icrs')
 # Other representations and `system` keywords delegate to the appropriate
 # low-level class. The already-existing registry for user-defined coordinates
 # will be used by `SkyCoordinate` to figure out what various the `system`
