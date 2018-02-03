@@ -1,3 +1,14 @@
+# Note
+# ====
+#
+# This document was discussed extensively at
+# https://github.com/astropy/astropy-api/pull/5 and the discussion
+# did not fully converge and stopped after a few years. The present
+# version of the document should thus not be taken as a final
+# guideline for the API, but is kept for the record. Anyone reading
+# this should also read the original pull request for more context.
+# A reasonable fraction of the API here was implemented into photutils.
+#
 # About
 # =====
 #
